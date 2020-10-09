@@ -12,10 +12,6 @@ tags: []
 ```{r}
 summary(cars)
 
-<<<<<<< HEAD
 head(cars) 
-=======
-cars
->>>>>>> 5bf42f2847fe4c509d4efed9b82d2d0502dd08b4
 ```
 
