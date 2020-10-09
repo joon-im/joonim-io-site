@@ -7,3 +7,11 @@ categories:
   - R
 tags: []
 ---
+
+# R Markdown Testing
+
+```{r}
+print("test")
+```
+
+![](/post/2020-10-09-test_files/Screen Shot 2020-08-18 at 10.57.02 AM.png)
