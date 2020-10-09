@@ -1,0 +1,9 @@
+---
+title: test
+author: Joon
+date: '2020-10-09'
+slug: test
+categories:
+  - R
+tags: []
+---
