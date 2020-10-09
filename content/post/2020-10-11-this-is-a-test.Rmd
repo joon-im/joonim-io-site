@@ -1,0 +1,15 @@
+---
+title: this is a test
+author: Joon
+date: '2020-10-11'
+slug: this-is-a-test
+categories:
+  - test
+tags: []
+---
+
+
+```{r}
+summary(cars)
+```
+
