@@ -11,5 +11,7 @@ tags: []
 
 ```{r}
 summary(cars)
+
+head(cars) 
 ```
 
