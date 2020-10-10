@@ -8,6 +8,8 @@ tags: ["R", "tidyverse", "time Series", "modeltime", "fpp2", "fpp3", "forecast",
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(collapse = TRUE)
+library(formatR)
+library(tidyquant)
 ```
 
 # 1. Set Up
@@ -144,7 +146,7 @@ aus_tsbl_long %>%    # Data in long format
 
 ### 3.3 ggplot Method: Plot Multiple Series On Same Axes
 
-Multiple plots on the same axes is not a feature of `timetk` as of this writing. The `ggplot` & `fpp3` methods can be used to achieve the same result.
+Plots on the same axes is not a feature included in `timetk` as of this writing. The `ggplot` & `fpp3` methods can be used to achieve the same result.
 
 ```{r warning=FALSE}
 # Using ggplot
@@ -170,8 +172,8 @@ aus_prod_ts %>%
 aus_tsbl_long %>%
   ggplot(aes(x = index, y = value, group = key, color = key)) + 
   geom_line() + 
-  theme(legend.position = "None") +          # Remove legend
-  facet_grid(vars(key), scales = "free_y")   # With facetting
+  theme(legend.position = "None") +         # Remove legend
+  facet_grid(vars(key), scales = "free_y")  # With facetting
 ```
 
 ### 3.6 timetk Method: Plot Multiple Series On Separate Axes
@@ -189,20 +191,73 @@ aus_tbl_long %>%
     )
 ```
 
+# 4. Seasonal Plots
+
+Use seasonal plots for identifying time periods in which the patterns change. The following examples will use a dataset containing the number of anti-diabetic scripts given in Australia over a period of time.
+
+### 4.1 Load & Plot Data
+
+```{r}
+
+```
 
 
+### 4.1 fpp2 Method: Plot Individual Seasons
 
+```{r fig.height=6}
+# Monthly plot
+a1 <- fpp2::a10 %>%
+  autoplot()
 
+# Seasonal plot
+a2 <- a10 %>%
+  ggseasonplot(year.labels.left = TRUE,   # Add labels
+               year.labels = TRUE)
 
+# Arrangement of plots
+plot_grid(a1, a2, ncol=1, rel_heights = c(1, 1.5))
+```
 
+### 4.2 fpp3 Method: Plot Individual Seasons
 
+```{r}
+# Seasonal plot
+a10 %>%
+  as_tsibble() %>%
+  gg_season(value, labels="both")   # Add labels
+```
 
+### 4.3 ggplot Method: Plot Individual Seasons
 
+Plots including each season is not a feature included in `timetk` as of this writing. The `ggplot` & `fpp3` methods can be used to achieve the same result.
 
+```{r}
+# Convert ts to tibble
+a10_tbl <- fpp2::a10 %>%
+    tk_tbl()
 
+# New time-based features to group by
+a10_tbl_add <- a10_tbl %>% 
+    mutate( 
+        month = factor(month(index, label = TRUE)), # x-axis
+        year = factor(year(index))  # Grouped on y-axis
+    )
 
-
-
+# Seasonal plot
+a10_tbl_add %>%
+    ggplot(aes(x = month, y = value, 
+               group = year, color = year)) + 
+    geom_line() + 
+    geom_text(
+        data = a10_tbl_add %>% filter(month == min(month)),
+        aes(label = year, x = month, y = value),
+        nudge_x = -0.3) + 
+    geom_text(
+        data = a10_tbl_add %>% filter(month == max(month)),
+        aes(label = year, x = month, y = value),
+        nudge_x = 0.3) + 
+    guides(color = FALSE)
+```
 
 
 

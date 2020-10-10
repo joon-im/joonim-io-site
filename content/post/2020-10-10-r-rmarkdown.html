@@ -174,7 +174,7 @@ aus_tsbl_long %&gt;%    # Data in long format
 </div>
 <div id="ggplot-method-plot-multiple-series-on-same-axes" class="section level3">
 <h3>3.3 ggplot Method: Plot Multiple Series On Same Axes</h3>
-<p>Multiple plots on the same axes is not a feature of <code>timetk</code> as of this writing. The <code>ggplot</code> &amp; <code>fpp3</code> methods can be used to achieve the same result.</p>
+<p>Plots on the same axes is not a feature included in <code>timetk</code> as of this writing. The <code>ggplot</code> &amp; <code>fpp3</code> methods can be used to achieve the same result.</p>
 <pre class="r"><code># Using ggplot
 aus_tbl_long %&gt;%
     ggplot(aes(date, value, group = name, color = name)) +
@@ -195,8 +195,8 @@ aus_prod_ts %&gt;%
 aus_tsbl_long %&gt;%
   ggplot(aes(x = index, y = value, group = key, color = key)) + 
   geom_line() + 
-  theme(legend.position = &quot;None&quot;) +          # Remove legend
-  facet_grid(vars(key), scales = &quot;free_y&quot;)   # With facetting</code></pre>
+  theme(legend.position = &quot;None&quot;) +         # Remove legend
+  facet_grid(vars(key), scales = &quot;free_y&quot;)  # With facetting</code></pre>
 <p><img src="/post/2020-10-10-r-rmarkdown_files/figure-html/unnamed-chunk-10-1.png" width="768" /></p>
 </div>
 <div id="timetk-method-plot-multiple-series-on-separate-axes" class="section level3">
@@ -212,6 +212,66 @@ aus_tbl_long %&gt;%
         .legend_show = FALSE
     )</code></pre>
 <p><img src="/post/2020-10-10-r-rmarkdown_files/figure-html/unnamed-chunk-11-1.png" width="768" /></p>
+</div>
+</div>
+<div id="seasonal-plots" class="section level1">
+<h1>4. Seasonal Plots</h1>
+<p>Use seasonal plots for identifying time periods in which the patterns change. The following examples will use a dataset containing the number of anti-diabetic scripts given in Australia over a period of time.</p>
+<div id="load-plot-data" class="section level3">
+<h3>4.1 Load &amp; Plot Data</h3>
+</div>
+<div id="fpp2-method-plot-individual-seasons" class="section level3">
+<h3>4.1 fpp2 Method: Plot Individual Seasons</h3>
+<pre class="r"><code># Monthly plot
+a1 &lt;- fpp2::a10 %&gt;%
+  autoplot()
+
+# Seasonal plot
+a2 &lt;- a10 %&gt;%
+  ggseasonplot(year.labels.left = TRUE,   # Add labels
+               year.labels = TRUE)
+
+# Arrangement of plots
+plot_grid(a1, a2, ncol=1, rel_heights = c(1, 1.5))</code></pre>
+<p><img src="/post/2020-10-10-r-rmarkdown_files/figure-html/unnamed-chunk-13-1.png" width="672" /></p>
+</div>
+<div id="fpp3-method-plot-individual-seasons" class="section level3">
+<h3>4.2 fpp3 Method: Plot Individual Seasons</h3>
+<pre class="r"><code># Seasonal plot
+a10 %&gt;%
+  as_tsibble() %&gt;%
+  gg_season(value, labels=&quot;both&quot;)   # Add labels</code></pre>
+<p><img src="/post/2020-10-10-r-rmarkdown_files/figure-html/unnamed-chunk-14-1.png" width="672" /></p>
+</div>
+<div id="ggplot-method-plot-individual-seasons" class="section level3">
+<h3>4.3 ggplot Method: Plot Individual Seasons</h3>
+<p>Plots including each season is not a feature included in <code>timetk</code> as of this writing. The <code>ggplot</code> &amp; <code>fpp3</code> methods can be used to achieve the same result.</p>
+<pre class="r"><code># Convert ts to tibble
+a10_tbl &lt;- fpp2::a10 %&gt;%
+    tk_tbl()
+
+# New time-based features to group by
+a10_tbl_add &lt;- a10_tbl %&gt;% 
+    mutate( 
+        month = factor(month(index, label = TRUE)), # x-axis
+        year = factor(year(index))  # Grouped on y-axis
+    )
+
+# Seasonal plot
+a10_tbl_add %&gt;%
+    ggplot(aes(x = month, y = value, 
+               group = year, color = year)) + 
+    geom_line() + 
+    geom_text(
+        data = a10_tbl_add %&gt;% filter(month == min(month)),
+        aes(label = year, x = month, y = value),
+        nudge_x = -0.3) + 
+    geom_text(
+        data = a10_tbl_add %&gt;% filter(month == max(month)),
+        aes(label = year, x = month, y = value),
+        nudge_x = 0.3) + 
+    guides(color = FALSE)</code></pre>
+<p><img src="/post/2020-10-10-r-rmarkdown_files/figure-html/unnamed-chunk-15-1.png" width="672" /></p>
 </div>
 </div>
 <div id="including-plots" class="section level1">
