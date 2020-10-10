@@ -10,11 +10,23 @@ tags: ["R", "tidyverse", "time Series", "modeltime", "fpp2", "fpp3", "forecast",
 knitr::opts_chunk$set(collapse = TRUE)
 ```
 
-# R Markdown
+# 1. Set Up
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+### 1.1 Introduction
 
-You can embed an R code chunk like this:
+There are a number of forecasting packages written in R to choose from, each with their own pros and cons.
+
+For almost a decade, the `forecast` library from the `fpp2` forecasting framework has been a major force in the time series world. However, within the last year or so an official update has been released. This new `fpp3` framework utilizes a package called `fable` that follows tidy methodology as opposed to using base R code. 
+
+More recently, the `modeltime` library has been released and this also follows tidy methods. It has a companion package `timetk` for data manipulation and visualization which is also written by the same author.
+
+The following is a code comparison of various time series visualizations between these frameworks: `fpp2`, `fpp3` and `timetk/modeltime`.
+
+Before we start, keep a few things in mind:
+
+- Only the essential code has been provided
+- Non-essential code such as plot titles and themes has been excluded
+- All plots utilize the Business Science ggplot theme
 
 ```{r cars}
 summary(cars)

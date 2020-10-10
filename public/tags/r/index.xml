@@ -13,9 +13,8 @@
       <pubDate>Sat, 10 Oct 2020 00:00:00 +0000</pubDate>
       
       <guid>/2020/10/10/tidy-forecasting-how-to-visualize-time-series/</guid>
-      <description>R Markdown This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see http://rmarkdown.rstudio.com.
-You can embed an R code chunk like this:
-summary(cars) ## speed dist ## Min. : 4.0 Min. : 2.00 ## 1st Qu.:12.0 1st Qu.: 26.00 ## Median :15.0 Median : 36.00 ## Mean :15.4 Mean : 42.98 ## 3rd Qu.</description>
+      <description>1. Set Up 1.1 Introduction There are a number of forecasting packages written in R to choose from, each with their own pros and cons.
+For almost a decade, the forecast library from the fpp2 forecasting framework has been a major force in the time series world. However, within the last year or so an official update has been released. This new fpp3 framework utilizes a package called fable that follows tidy methodology as opposed to using base R code.</description>
     </item>
     
   </channel>

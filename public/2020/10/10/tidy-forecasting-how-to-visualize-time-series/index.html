@@ -60,7 +60,7 @@
 
   <article class="article">
     
-    <span class="article-duration">1 min read</span>
+    <span class="article-duration">2 min read</span>
     
 
     <h1 class="article-title">Tidy Forecasting: How to Visualize Time Series</h1>
@@ -73,10 +73,20 @@
       
 
 
-<div id="r-markdown" class="section level1">
-<h1>R Markdown</h1>
-<p>This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <a href="http://rmarkdown.rstudio.com" class="uri">http://rmarkdown.rstudio.com</a>.</p>
-<p>You can embed an R code chunk like this:</p>
+<div id="set-up" class="section level1">
+<h1>1. Set Up</h1>
+<div id="introduction" class="section level3">
+<h3>1.1 Introduction</h3>
+<p>There are a number of forecasting packages written in R to choose from, each with their own pros and cons.</p>
+<p>For almost a decade, the <code>forecast</code> library from the <code>fpp2</code> forecasting framework has been a major force in the time series world. However, within the last year or so an official update has been released. This new <code>fpp3</code> framework utilizes a package called <code>fable</code> that follows tidy methodology as opposed to using base R code.</p>
+<p>More recently, the <code>modeltime</code> library has been released and this also follows tidy methods. It has a companion package <code>timetk</code> for data manipulation and visualization which is also written by the same author.</p>
+<p>The following is a code comparison of various time series visualizations between these frameworks: <code>fpp2</code>, <code>fpp3</code> and <code>timetk/modeltime</code>.</p>
+<p>Before we start, keep a few things in mind:</p>
+<ul>
+<li>Only the essential code has been provided</li>
+<li>Non-essential code such as plot titles and themes has been excluded</li>
+<li>All plots utilize the Business Science ggplot theme</li>
+</ul>
 <pre class="r"><code>summary(cars)
 ##      speed           dist       
 ##  Min.   : 4.0   Min.   :  2.00  
@@ -94,6 +104,7 @@ fit
 ## Coefficients:
 ## (Intercept)        speed  
 ##     -17.579        3.932</code></pre>
+</div>
 </div>
 <div id="including-plots" class="section level1">
 <h1>Including Plots</h1>
