@@ -1,21 +1,12 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>R on Joon&#39;s Blog</title>
-    <link>/categories/r/</link>
-    <description>Recent content in R on Joon&#39;s Blog</description>
+    <title>modeltime on Joon&#39;s Blog</title>
+    <link>/tags/modeltime/</link>
+    <description>Recent content in modeltime on Joon&#39;s Blog</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <lastBuildDate>Sat, 10 Oct 2020 00:00:00 +0000</lastBuildDate><atom:link href="/categories/r/index.xml" rel="self" type="application/rss+xml" />
-    <item>
-      <title>test</title>
-      <link>/2020/10/10/test/</link>
-      <pubDate>Sat, 10 Oct 2020 00:00:00 +0000</pubDate>
-      
-      <guid>/2020/10/10/test/</guid>
-      <description> R Markdown Testing print(&amp;quot;test&amp;quot;) ## [1] &amp;quot;test&amp;quot;  </description>
-    </item>
-    
+    <lastBuildDate>Sat, 10 Oct 2020 00:00:00 +0000</lastBuildDate><atom:link href="/tags/modeltime/index.xml" rel="self" type="application/rss+xml" />
     <item>
       <title>Tidy Forecasting: How to Visualize Time Series</title>
       <link>/2020/10/10/tidy-forecasting-how-to-visualize-time-series/</link>

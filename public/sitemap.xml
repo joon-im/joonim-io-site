@@ -28,27 +28,37 @@
   </url>
   
   <url>
-    <loc>/2020/10/10/markdown-testing/</loc>
+    <loc>/tags/fable/</loc>
     <lastmod>2020-10-10T00:00:00+00:00</lastmod>
   </url>
   
   <url>
-    <loc>/tags/plot/</loc>
+    <loc>/tags/forecast/</loc>
+    <lastmod>2020-10-10T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/tags/fpp2/</loc>
+    <lastmod>2020-10-10T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/tags/fpp3/</loc>
+    <lastmod>2020-10-10T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/tags/modeltime/</loc>
+    <lastmod>2020-10-10T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/tags/r/</loc>
     <lastmod>2020-10-10T00:00:00+00:00</lastmod>
   </url>
   
   <url>
     <loc>/categories/r/</loc>
-    <lastmod>2020-10-10T00:00:00+00:00</lastmod>
-  </url>
-  
-  <url>
-    <loc>/tags/r-markdown/</loc>
-    <lastmod>2020-10-10T00:00:00+00:00</lastmod>
-  </url>
-  
-  <url>
-    <loc>/tags/regression/</loc>
     <lastmod>2020-10-10T00:00:00+00:00</lastmod>
   </url>
   
@@ -63,13 +73,23 @@
   </url>
   
   <url>
-    <loc>/about/</loc>
-    <lastmod>2020-10-09T00:00:00+00:00</lastmod>
+    <loc>/2020/10/10/tidy-forecasting-how-to-visualize-time-series/</loc>
+    <lastmod>2020-10-10T00:00:00+00:00</lastmod>
   </url>
   
   <url>
-    <loc>/2016/12/30/a-plain-markdown-post/</loc>
-    <lastmod>2016-12-30T21:49:57-07:00</lastmod>
+    <loc>/tags/tidyverse/</loc>
+    <lastmod>2020-10-10T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/tags/time-series/</loc>
+    <lastmod>2020-10-10T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/about/</loc>
+    <lastmod>2020-10-09T00:00:00+00:00</lastmod>
   </url>
   
 </urlset>

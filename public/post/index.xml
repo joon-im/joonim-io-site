@@ -17,17 +17,6 @@
     </item>
     
     <item>
-      <title>Markdown Testing</title>
-      <link>/2020/10/10/markdown-testing/</link>
-      <pubDate>Sat, 10 Oct 2020 00:00:00 +0000</pubDate>
-      
-      <guid>/2020/10/10/markdown-testing/</guid>
-      <description>R Markdown This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see http://rmarkdown.rstudio.com.
-You can embed an R code chunk like this:
-summary(cars) ## speed dist ## Min. : 4.0 Min. : 2.00 ## 1st Qu.:12.0 1st Qu.: 26.00 ## Median :15.0 Median : 36.00 ## Mean :15.4 Mean : 42.98 ## 3rd Qu.</description>
-    </item>
-    
-    <item>
       <title>test</title>
       <link>/2020/10/10/test/</link>
       <pubDate>Sat, 10 Oct 2020 00:00:00 +0000</pubDate>
@@ -37,13 +26,14 @@ summary(cars) ## speed dist ## Min. : 4.0 Min. : 2.00 ## 1st Qu.:12.0 1st Qu.: 2
     </item>
     
     <item>
-      <title>A Plain Markdown Post</title>
-      <link>/2016/12/30/a-plain-markdown-post/</link>
-      <pubDate>Fri, 30 Dec 2016 21:49:57 -0700</pubDate>
+      <title>Tidy Forecasting: How to Visualize Time Series</title>
+      <link>/2020/10/10/tidy-forecasting-how-to-visualize-time-series/</link>
+      <pubDate>Sat, 10 Oct 2020 00:00:00 +0000</pubDate>
       
-      <guid>/2016/12/30/a-plain-markdown-post/</guid>
-      <description>This is a post written in plain Markdown (*.md) instead of R Markdown (*.Rmd). The major differences are:
- You cannot run any R code in a plain Markdown document, whereas in an R Markdown document, you can embed R code chunks (```{r}); A plain Markdown post is rendered through Blackfriday, and an R Markdown document is compiled by rmarkdown and Pandoc.  There are many differences in syntax between Blackfriday&amp;rsquo;s Markdown and Pandoc&amp;rsquo;s Markdown.</description>
+      <guid>/2020/10/10/tidy-forecasting-how-to-visualize-time-series/</guid>
+      <description>R Markdown This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see http://rmarkdown.rstudio.com.
+You can embed an R code chunk like this:
+summary(cars) ## speed dist ## Min. : 4.0 Min. : 2.00 ## 1st Qu.:12.0 1st Qu.: 26.00 ## Median :15.0 Median : 36.00 ## Mean :15.4 Mean : 42.98 ## 3rd Qu.</description>
     </item>
     
   </channel>

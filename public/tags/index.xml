@@ -8,29 +8,74 @@
     <language>en-us</language>
     <lastBuildDate>Sat, 10 Oct 2020 00:00:00 +0000</lastBuildDate><atom:link href="/tags/index.xml" rel="self" type="application/rss+xml" />
     <item>
-      <title>plot</title>
-      <link>/tags/plot/</link>
+      <title>fable</title>
+      <link>/tags/fable/</link>
       <pubDate>Sat, 10 Oct 2020 00:00:00 +0000</pubDate>
       
-      <guid>/tags/plot/</guid>
+      <guid>/tags/fable/</guid>
       <description></description>
     </item>
     
     <item>
-      <title>R Markdown</title>
-      <link>/tags/r-markdown/</link>
+      <title>forecast</title>
+      <link>/tags/forecast/</link>
       <pubDate>Sat, 10 Oct 2020 00:00:00 +0000</pubDate>
       
-      <guid>/tags/r-markdown/</guid>
+      <guid>/tags/forecast/</guid>
       <description></description>
     </item>
     
     <item>
-      <title>regression</title>
-      <link>/tags/regression/</link>
+      <title>fpp2</title>
+      <link>/tags/fpp2/</link>
       <pubDate>Sat, 10 Oct 2020 00:00:00 +0000</pubDate>
       
-      <guid>/tags/regression/</guid>
+      <guid>/tags/fpp2/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>fpp3</title>
+      <link>/tags/fpp3/</link>
+      <pubDate>Sat, 10 Oct 2020 00:00:00 +0000</pubDate>
+      
+      <guid>/tags/fpp3/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>modeltime</title>
+      <link>/tags/modeltime/</link>
+      <pubDate>Sat, 10 Oct 2020 00:00:00 +0000</pubDate>
+      
+      <guid>/tags/modeltime/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>R</title>
+      <link>/tags/r/</link>
+      <pubDate>Sat, 10 Oct 2020 00:00:00 +0000</pubDate>
+      
+      <guid>/tags/r/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>tidyverse</title>
+      <link>/tags/tidyverse/</link>
+      <pubDate>Sat, 10 Oct 2020 00:00:00 +0000</pubDate>
+      
+      <guid>/tags/tidyverse/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>time Series</title>
+      <link>/tags/time-series/</link>
+      <pubDate>Sat, 10 Oct 2020 00:00:00 +0000</pubDate>
+      
+      <guid>/tags/time-series/</guid>
       <description></description>
     </item>
     
