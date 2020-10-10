@@ -39,13 +39,13 @@ library(tidyverse)    # Data manipulation tools
 library(cowplot)      # Add-on for arranging plots
 ```
 
-# 2. ts vs tsibble vs tibble
+# 2. Convert Time Series Objects
 
 - The base ts object is used by `forecast` & `fpp2`
 - The special `tsibble` object is used by `fable` & `fpp3`
 - The standard `tibble` object is used by `timetk` & `modeltime`
 
-### 2.1 Load Time Series Data
+### 2.1 Load Data
 
 For the next few visualizations, we will utilize a dataset containing quarterly production values of certain commodities in Australia.
 
@@ -58,6 +58,178 @@ aus %>% str()
 ```
 
 *Always check the class of your time series data.*
+
+### 2.2 fpp2 Method: tibble to ts
+
+```{r}
+# Convert tibble to time series object
+aus_prod_ts <- ts(aus[, 2:7],  # Choose columns
+                    start = c(1956, 1),  # Choose start date
+                    end = c(2010, 2),    # Choose end date
+                    frequency = 4)       # Choose frequency per yr
+# Check it out
+aus_prod_ts %>% head()
+```
+
+### 2.3 fpp3 Method: tibble/ts to tsibble
+
+```{r}
+# Convert ts to tsibble, keep wide format
+aus_tsbl_wide <- aus_prod_ts %>%    # TS object
+  as_tsibble(index = "index",           # Set index column
+             pivot_longer = FALSE)      # Wide format
+
+# Check it out
+aus_tsbl_wide %>% head()
+```
+
+```{r}
+# Convert ts to tsibble, pivot to long format
+aus_tsbl_long <- aus_prod_ts %>%    # TS object
+  as_tsibble(index = "index",           # Set index column
+             pivot_longer = TRUE)       # Long format
+
+# Check it out
+aus_tsbl_long %>% head()
+```
+
+### 2.4 timetk Method: From tsibble/ts to tibble
+
+```{r}
+# Convert tsibble to tibble, keep wide format
+aus_tbl_wide <- tsibbledata::aus_production %>% 
+    tk_tbl(preserve_index = FALSE) %>%
+    mutate(Quarter = as_date(as.POSIXct.Date(Quarter))) 
+
+# Check it out
+aus_tbl_wide %>% head()
+```
+
+```{r}
+# Convert tsibble to tibble, pivot to long format
+aus_tbl_long <- tsibbledata::aus_production %>% 
+    tk_tbl(preserve_index = FALSE) %>%
+    mutate(date = as_date(as.POSIXct.Date(Quarter))) %>%
+    pivot_longer(cols = c("Beer":"Gas"))
+
+# Check it out
+aus_tbl_long %>% head()
+```
+
+# 3. Time Series Plots
+
+When analyzing time series plots, look for the following patterns:
+
+- **Trend**: A long-term increase or decrease in the data; a “changing direction”.
+- **Seasonality**: A seasonal pattern of a fixed and known period. If the frequency is unchanging and associated with some aspect of the calendar, then the pattern is seasonal.
+- **Cycle**: A rise and fall pattern not of a fixed frequency. If the fluctuations are not of a fixed frequency then they are cyclic.
+- **Seasonal vs Cyclic**: Cyclic patterns are longer and more variable than seasonal patterns in general.
+
+### 3.1 fpp2 Method: Plot Multiple Series On Same Axes
+
+```{r}
+# Using fpp2
+aus_prod_ts %>%               # TS object
+  autoplot(facets=FALSE) +    # No facetting
+  ggtitle("Quarterly Production of Select Australian Commodities")
+```
+
+### 3.2 fpp3 Method: Plot Multiple Series On Same Axes
+
+```{r warning=FALSE}
+# Using fpp3
+aus_tsbl_long %>%    # Data in long format
+  autoplot(value)
+```
+
+### 3.3 ggplot Method: Plot Multiple Series On Same Axes
+
+Multiple plots on the same axes is not a feature of `timetk` as of this writing. The `ggplot` & `fpp3` methods can be used to achieve the same result.
+
+```{r warning=FALSE}
+# Using ggplot
+aus_tbl_long %>%
+    ggplot(aes(date, value, group = name, color = name)) +
+    geom_line()
+```
+
+---
+
+### 3.4 fpp2 Method: Plot Multiple Series On Separate Axes
+
+```{r fig.height=6, fig.width=8, warning=FALSE}
+# Using fpp2
+aus_prod_ts %>%  
+  autoplot(facets=TRUE)   # With facetting
+```
+
+### 3.5 fpp3 Method: Plot Multiple Series On Separate Axes
+
+```{r fig.height=6, fig.width=8, warning=FALSE}
+# Using fpp3
+aus_tsbl_long %>%
+  ggplot(aes(x = index, y = value, group = key, color = key)) + 
+  geom_line() + 
+  theme(legend.position = "None") +          # Remove legend
+  facet_grid(vars(key), scales = "free_y")   # With facetting
+```
+
+### 3.6 timetk Method: Plot Multiple Series On Separate Axes
+
+```{r fig.height=7, fig.width=8, warning=FALSE}
+# Using timetk
+aus_tbl_long %>% 
+    plot_time_series(
+        .date_var = date,
+        .value = value,
+        .facet_vars = c(name), # Group by these columns
+        .color_var = name, 
+        .interactive = FALSE,
+        .legend_show = FALSE
+    )
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

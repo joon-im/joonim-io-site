@@ -33,15 +33,15 @@ library(tidyverse)    # Data manipulation tools
 library(cowplot)      # Add-on for arranging plots</code></pre>
 </div>
 </div>
-<div id="ts-vs-tsibble-vs-tibble" class="section level1">
-<h1>2. ts vs tsibble vs tibble</h1>
+<div id="convert-time-series-objects" class="section level1">
+<h1>2. Convert Time Series Objects</h1>
 <ul>
 <li>The base ts object is used by <code>forecast</code> &amp; <code>fpp2</code></li>
 <li>The special <code>tsibble</code> object is used by <code>fable</code> &amp; <code>fpp3</code></li>
 <li>The standard <code>tibble</code> object is used by <code>timetk</code> &amp; <code>modeltime</code></li>
 </ul>
-<div id="load-time-series-data" class="section level3">
-<h3>2.1 Load Time Series Data</h3>
+<div id="load-data" class="section level3">
+<h3>2.1 Load Data</h3>
 <p>For the next few visualizations, we will utilize a dataset containing quarterly production values of certain commodities in Australia.</p>
 <pre class="r"><code># Quarterly Australian production data as tibble
 aus &lt;- tsibbledata::aus_production %&gt;% as_tibble()
@@ -57,6 +57,161 @@ aus %&gt;% str()
 ##  $ Electricity: num [1:218] 3923 4436 4806 4418 4339 ...
 ##  $ Gas        : num [1:218] 5 6 7 6 5 7 7 6 5 7 ...</code></pre>
 <p><em>Always check the class of your time series data.</em></p>
+</div>
+<div id="fpp2-method-tibble-to-ts" class="section level3">
+<h3>2.2 fpp2 Method: tibble to ts</h3>
+<pre class="r"><code># Convert tibble to time series object
+aus_prod_ts &lt;- ts(aus[, 2:7],  # Choose columns
+                    start = c(1956, 1),  # Choose start date
+                    end = c(2010, 2),    # Choose end date
+                    frequency = 4)       # Choose frequency per yr
+# Check it out
+aus_prod_ts %&gt;% head()
+##         Beer Tobacco Bricks Cement Electricity Gas
+## 1956 Q1  284    5225    189    465        3923   5
+## 1956 Q2  213    5178    204    532        4436   6
+## 1956 Q3  227    5297    208    561        4806   7
+## 1956 Q4  308    5681    197    570        4418   6
+## 1957 Q1  262    5577    187    529        4339   5
+## 1957 Q2  228    5651    214    604        4811   7</code></pre>
+</div>
+<div id="fpp3-method-tibblets-to-tsibble" class="section level3">
+<h3>2.3 fpp3 Method: tibble/ts to tsibble</h3>
+<pre class="r"><code># Convert ts to tsibble, keep wide format
+aus_tsbl_wide &lt;- aus_prod_ts %&gt;%    # TS object
+  as_tsibble(index = &quot;index&quot;,           # Set index column
+             pivot_longer = FALSE)      # Wide format
+
+# Check it out
+aus_tsbl_wide %&gt;% head()
+## # A tsibble: 6 x 7 [1Q]
+##     index  Beer Tobacco Bricks Cement Electricity   Gas
+##     &lt;qtr&gt; &lt;dbl&gt;   &lt;dbl&gt;  &lt;dbl&gt;  &lt;dbl&gt;       &lt;dbl&gt; &lt;dbl&gt;
+## 1 1956 Q1   284    5225    189    465        3923     5
+## 2 1956 Q2   213    5178    204    532        4436     6
+## 3 1956 Q3   227    5297    208    561        4806     7
+## 4 1956 Q4   308    5681    197    570        4418     6
+## 5 1957 Q1   262    5577    187    529        4339     5
+## 6 1957 Q2   228    5651    214    604        4811     7</code></pre>
+<pre class="r"><code># Convert ts to tsibble, pivot to long format
+aus_tsbl_long &lt;- aus_prod_ts %&gt;%    # TS object
+  as_tsibble(index = &quot;index&quot;,           # Set index column
+             pivot_longer = TRUE)       # Long format
+
+# Check it out
+aus_tsbl_long %&gt;% head()
+## # A tsibble: 6 x 3 [1Q]
+## # Key:       key [1]
+##     index key   value
+##     &lt;qtr&gt; &lt;chr&gt; &lt;dbl&gt;
+## 1 1956 Q1 Beer    284
+## 2 1956 Q2 Beer    213
+## 3 1956 Q3 Beer    227
+## 4 1956 Q4 Beer    308
+## 5 1957 Q1 Beer    262
+## 6 1957 Q2 Beer    228</code></pre>
+</div>
+<div id="timetk-method-from-tsibblets-to-tibble" class="section level3">
+<h3>2.4 timetk Method: From tsibble/ts to tibble</h3>
+<pre class="r"><code># Convert tsibble to tibble, keep wide format
+aus_tbl_wide &lt;- tsibbledata::aus_production %&gt;% 
+    tk_tbl(preserve_index = FALSE) %&gt;%
+    mutate(Quarter = as_date(as.POSIXct.Date(Quarter))) 
+
+# Check it out
+aus_tbl_wide %&gt;% head()
+## # A tibble: 6 x 7
+##   Quarter     Beer Tobacco Bricks Cement Electricity   Gas
+##   &lt;date&gt;     &lt;dbl&gt;   &lt;dbl&gt;  &lt;dbl&gt;  &lt;dbl&gt;       &lt;dbl&gt; &lt;dbl&gt;
+## 1 1955-12-31   284    5225    189    465        3923     5
+## 2 1956-03-31   213    5178    204    532        4436     6
+## 3 1956-06-30   227    5297    208    561        4806     7
+## 4 1956-09-30   308    5681    197    570        4418     6
+## 5 1956-12-31   262    5577    187    529        4339     5
+## 6 1957-03-31   228    5651    214    604        4811     7</code></pre>
+<pre class="r"><code># Convert tsibble to tibble, pivot to long format
+aus_tbl_long &lt;- tsibbledata::aus_production %&gt;% 
+    tk_tbl(preserve_index = FALSE) %&gt;%
+    mutate(date = as_date(as.POSIXct.Date(Quarter))) %&gt;%
+    pivot_longer(cols = c(&quot;Beer&quot;:&quot;Gas&quot;))
+
+# Check it out
+aus_tbl_long %&gt;% head()
+## # A tibble: 6 x 4
+##   Quarter date       name        value
+##     &lt;qtr&gt; &lt;date&gt;     &lt;chr&gt;       &lt;dbl&gt;
+## 1 1956 Q1 1955-12-31 Beer          284
+## 2 1956 Q1 1955-12-31 Tobacco      5225
+## 3 1956 Q1 1955-12-31 Bricks        189
+## 4 1956 Q1 1955-12-31 Cement        465
+## 5 1956 Q1 1955-12-31 Electricity  3923
+## 6 1956 Q1 1955-12-31 Gas             5</code></pre>
+</div>
+</div>
+<div id="time-series-plots" class="section level1">
+<h1>3. Time Series Plots</h1>
+<p>When analyzing time series plots, look for the following patterns:</p>
+<ul>
+<li><strong>Trend</strong>: A long-term increase or decrease in the data; a “changing direction”.</li>
+<li><strong>Seasonality</strong>: A seasonal pattern of a fixed and known period. If the frequency is unchanging and associated with some aspect of the calendar, then the pattern is seasonal.</li>
+<li><strong>Cycle</strong>: A rise and fall pattern not of a fixed frequency. If the fluctuations are not of a fixed frequency then they are cyclic.</li>
+<li><strong>Seasonal vs Cyclic</strong>: Cyclic patterns are longer and more variable than seasonal patterns in general.</li>
+</ul>
+<div id="fpp2-method-plot-multiple-series-on-same-axes" class="section level3">
+<h3>3.1 fpp2 Method: Plot Multiple Series On Same Axes</h3>
+<pre class="r"><code># Using fpp2
+aus_prod_ts %&gt;%               # TS object
+  autoplot(facets=FALSE) +    # No facetting
+  ggtitle(&quot;Quarterly Production of Select Australian Commodities&quot;)</code></pre>
+<p><img src="/post/2020-10-10-r-rmarkdown_files/figure-html/unnamed-chunk-6-1.png" width="672" /></p>
+</div>
+<div id="fpp3-method-plot-multiple-series-on-same-axes" class="section level3">
+<h3>3.2 fpp3 Method: Plot Multiple Series On Same Axes</h3>
+<pre class="r"><code># Using fpp3
+aus_tsbl_long %&gt;%    # Data in long format
+  autoplot(value)</code></pre>
+<p><img src="/post/2020-10-10-r-rmarkdown_files/figure-html/unnamed-chunk-7-1.png" width="672" /></p>
+</div>
+<div id="ggplot-method-plot-multiple-series-on-same-axes" class="section level3">
+<h3>3.3 ggplot Method: Plot Multiple Series On Same Axes</h3>
+<p>Multiple plots on the same axes is not a feature of <code>timetk</code> as of this writing. The <code>ggplot</code> &amp; <code>fpp3</code> methods can be used to achieve the same result.</p>
+<pre class="r"><code># Using ggplot
+aus_tbl_long %&gt;%
+    ggplot(aes(date, value, group = name, color = name)) +
+    geom_line()</code></pre>
+<p><img src="/post/2020-10-10-r-rmarkdown_files/figure-html/unnamed-chunk-8-1.png" width="672" /></p>
+<hr />
+</div>
+<div id="fpp2-method-plot-multiple-series-on-separate-axes" class="section level3">
+<h3>3.4 fpp2 Method: Plot Multiple Series On Separate Axes</h3>
+<pre class="r"><code># Using fpp2
+aus_prod_ts %&gt;%  
+  autoplot(facets=TRUE)   # With facetting</code></pre>
+<p><img src="/post/2020-10-10-r-rmarkdown_files/figure-html/unnamed-chunk-9-1.png" width="768" /></p>
+</div>
+<div id="fpp3-method-plot-multiple-series-on-separate-axes" class="section level3">
+<h3>3.5 fpp3 Method: Plot Multiple Series On Separate Axes</h3>
+<pre class="r"><code># Using fpp3
+aus_tsbl_long %&gt;%
+  ggplot(aes(x = index, y = value, group = key, color = key)) + 
+  geom_line() + 
+  theme(legend.position = &quot;None&quot;) +          # Remove legend
+  facet_grid(vars(key), scales = &quot;free_y&quot;)   # With facetting</code></pre>
+<p><img src="/post/2020-10-10-r-rmarkdown_files/figure-html/unnamed-chunk-10-1.png" width="768" /></p>
+</div>
+<div id="timetk-method-plot-multiple-series-on-separate-axes" class="section level3">
+<h3>3.6 timetk Method: Plot Multiple Series On Separate Axes</h3>
+<pre class="r"><code># Using timetk
+aus_tbl_long %&gt;% 
+    plot_time_series(
+        .date_var = date,
+        .value = value,
+        .facet_vars = c(name), # Group by these columns
+        .color_var = name, 
+        .interactive = FALSE,
+        .legend_show = FALSE
+    )</code></pre>
+<p><img src="/post/2020-10-10-r-rmarkdown_files/figure-html/unnamed-chunk-11-1.png" width="768" /></p>
 </div>
 </div>
 <div id="including-plots" class="section level1">
