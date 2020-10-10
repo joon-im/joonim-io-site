@@ -28,11 +28,44 @@ Before we start, keep a few things in mind:
 - Non-essential code such as plot titles and themes has been excluded
 - All plots utilize the Business Science ggplot theme
 
-```{r cars}
-summary(cars)
-fit <- lm(dist ~ speed, data = cars)
-fit
+### 1.2 Load Libraries
+
+```{r libraries, message=FALSE, warning=FALSE}
+# Load libraries
+library(fpp2)         # The OG of forecasting
+library(fpp3)         # Official update to fpp2
+library(timetk)       # Companion to modeltime
+library(tidyverse)    # Data manipulation tools
+library(cowplot)      # Add-on for arranging plots
 ```
+
+# 2. ts vs tsibble vs tibble
+
+- The base ts object is used by `forecast` & `fpp2`
+- The special `tsibble` object is used by `fable` & `fpp3`
+- The standard `tibble` object is used by `timetk` & `modeltime`
+
+### 2.1 Load Time Series Data
+
+For the next few visualizations, we will utilize a dataset containing quarterly production values of certain commodities in Australia.
+
+```{r load data, tidy=TRUE}
+# Quarterly Australian production data as tibble
+aus <- tsibbledata::aus_production %>% as_tibble()
+
+# Check structure
+aus %>% str()
+```
+
+*Always check the class of your time series data.*
+
+
+
+
+
+
+
+
 
 # Including Plots
 

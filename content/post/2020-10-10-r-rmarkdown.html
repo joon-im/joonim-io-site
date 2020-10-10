@@ -22,23 +22,41 @@ tags: ["R", "tidyverse", "time Series", "modeltime", "fpp2", "fpp3", "forecast",
 <li>Non-essential code such as plot titles and themes has been excluded</li>
 <li>All plots utilize the Business Science ggplot theme</li>
 </ul>
-<pre class="r"><code>summary(cars)
-##      speed           dist       
-##  Min.   : 4.0   Min.   :  2.00  
-##  1st Qu.:12.0   1st Qu.: 26.00  
-##  Median :15.0   Median : 36.00  
-##  Mean   :15.4   Mean   : 42.98  
-##  3rd Qu.:19.0   3rd Qu.: 56.00  
-##  Max.   :25.0   Max.   :120.00
-fit &lt;- lm(dist ~ speed, data = cars)
-fit
-## 
-## Call:
-## lm(formula = dist ~ speed, data = cars)
-## 
-## Coefficients:
-## (Intercept)        speed  
-##     -17.579        3.932</code></pre>
+</div>
+<div id="load-libraries" class="section level3">
+<h3>1.2 Load Libraries</h3>
+<pre class="r"><code># Load libraries
+library(fpp2)         # The OG of forecasting
+library(fpp3)         # Official update to fpp2
+library(timetk)       # Companion to modeltime
+library(tidyverse)    # Data manipulation tools
+library(cowplot)      # Add-on for arranging plots</code></pre>
+</div>
+</div>
+<div id="ts-vs-tsibble-vs-tibble" class="section level1">
+<h1>2. ts vs tsibble vs tibble</h1>
+<ul>
+<li>The base ts object is used by <code>forecast</code> &amp; <code>fpp2</code></li>
+<li>The special <code>tsibble</code> object is used by <code>fable</code> &amp; <code>fpp3</code></li>
+<li>The standard <code>tibble</code> object is used by <code>timetk</code> &amp; <code>modeltime</code></li>
+</ul>
+<div id="load-time-series-data" class="section level3">
+<h3>2.1 Load Time Series Data</h3>
+<p>For the next few visualizations, we will utilize a dataset containing quarterly production values of certain commodities in Australia.</p>
+<pre class="r"><code># Quarterly Australian production data as tibble
+aus &lt;- tsibbledata::aus_production %&gt;% as_tibble()
+
+# Check structure
+aus %&gt;% str()
+## tibble [218 × 7] (S3: tbl_df/tbl/data.frame)
+##  $ Quarter    : qtr [1:218] 1956 Q1, 1956 Q2, 1956 Q3, 1956 Q4, 1957 Q1, 1957 Q2, 1957...
+##  $ Beer       : num [1:218] 284 213 227 308 262 228 236 320 272 233 ...
+##  $ Tobacco    : num [1:218] 5225 5178 5297 5681 5577 ...
+##  $ Bricks     : num [1:218] 189 204 208 197 187 214 227 222 199 229 ...
+##  $ Cement     : num [1:218] 465 532 561 570 529 604 603 582 554 620 ...
+##  $ Electricity: num [1:218] 3923 4436 4806 4418 4339 ...
+##  $ Gas        : num [1:218] 5 6 7 6 5 7 7 6 5 7 ...</code></pre>
+<p><em>Always check the class of your time series data.</em></p>
 </div>
 </div>
 <div id="including-plots" class="section level1">
