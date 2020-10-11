@@ -60,7 +60,7 @@
 
   <article class="article">
     
-    <span class="article-duration">8 min read</span>
+    <span class="article-duration">10 min read</span>
     
 
     <h1 class="article-title">Tidy Forecasting: How to Visualize Time Series</h1>
@@ -282,9 +282,6 @@ aus_tbl_long %&gt;%
 <div id="seasonal-plots" class="section level1">
 <h1>4. Seasonal Plots</h1>
 <p>Use seasonal plots for identifying time periods in which the patterns change. The following examples will use a dataset containing the number of anti-diabetic scripts given in Australia over a period of time.</p>
-<div id="load-plot-data" class="section level3">
-<h3>4.1 Load &amp; Plot Data</h3>
-</div>
 <div id="fpp2-method-plot-individual-seasons" class="section level3">
 <h3>4.1 fpp2 Method: Plot Individual Seasons</h3>
 <pre class="r"><code># Monthly plot
@@ -298,7 +295,7 @@ a2 &lt;- a10 %&gt;%
 
 # Arrangement of plots
 plot_grid(a1, a2, ncol=1, rel_heights = c(1, 1.5))</code></pre>
-<p><img src="/post/2020-10-10-r-rmarkdown_files/figure-html/unnamed-chunk-13-1.png" width="672" /></p>
+<p><img src="/post/2020-10-10-r-rmarkdown_files/figure-html/unnamed-chunk-12-1.png" width="672" /></p>
 </div>
 <div id="fpp3-method-plot-individual-seasons" class="section level3">
 <h3>4.2 fpp3 Method: Plot Individual Seasons</h3>
@@ -306,54 +303,214 @@ plot_grid(a1, a2, ncol=1, rel_heights = c(1, 1.5))</code></pre>
 a10 %&gt;%
   as_tsibble() %&gt;%
   gg_season(value, labels=&quot;both&quot;)   # Add labels</code></pre>
-<p><img src="/post/2020-10-10-r-rmarkdown_files/figure-html/unnamed-chunk-14-1.png" width="672" /></p>
+<p><img src="/post/2020-10-10-r-rmarkdown_files/figure-html/unnamed-chunk-13-1.png" width="672" /></p>
 </div>
 <div id="ggplot-method-plot-individual-seasons" class="section level3">
 <h3>4.3 ggplot Method: Plot Individual Seasons</h3>
 <p>Plots including each season is not a feature included in <code>timetk</code> as of this writing. The <code>ggplot</code> &amp; <code>fpp3</code> methods can be used to achieve the same result.</p>
 <pre class="r"><code># Convert ts to tibble
 a10_tbl &lt;- fpp2::a10 %&gt;%
-    tk_tbl()
+  tk_tbl()
 
 # New time-based features to group by
 a10_tbl_add &lt;- a10_tbl %&gt;% 
-    mutate( 
-        month = factor(month(index, label = TRUE)), # x-axis
-        year = factor(year(index))  # Grouped on y-axis
-    )
+  mutate( 
+      month = factor(month(index, label = TRUE)), # x-axis
+      year = factor(year(index))  # Grouped on y-axis
+  )
 
 # Seasonal plot
 a10_tbl_add %&gt;%
-    ggplot(aes(x = month, y = value, 
-               group = year, color = year)) + 
-    geom_line() + 
-    geom_text(
-        data = a10_tbl_add %&gt;% filter(month == min(month)),
-        aes(label = year, x = month, y = value),
-        nudge_x = -0.3) + 
-    geom_text(
-        data = a10_tbl_add %&gt;% filter(month == max(month)),
-        aes(label = year, x = month, y = value),
-        nudge_x = 0.3) + 
-    guides(color = FALSE)</code></pre>
+  ggplot(aes(x = month, y = value, 
+             group = year, color = year)) + 
+  geom_line() + 
+  geom_text(
+    data = a10_tbl_add %&gt;% filter(month == min(month)),
+    aes(label = year, x = month, y = value),
+    nudge_x = -0.3) + 
+  geom_text(
+    data = a10_tbl_add %&gt;% filter(month == max(month)),
+    aes(label = year, x = month, y = value),
+    nudge_x = 0.3) + 
+  guides(color = FALSE) + 
+  theme_tq() + 
+  scale_color_tq()</code></pre>
+<p><img src="/post/2020-10-10-r-rmarkdown_files/figure-html/unnamed-chunk-14-1.png" width="672" /></p>
+</div>
+</div>
+<div id="subseries-plots" class="section level1">
+<h1>5. Subseries Plots</h1>
+<p>Use subseries plots to view seasonal changes over time. The following examples will use a dataset containing the monthly production of beer in Australia starting in 1992.</p>
+<div id="fpp2-method-plot-subseries-on-same-axes" class="section level3">
+<h3>5.1 fpp2 Method: Plot Subseries on Same Axes</h3>
+<pre class="r"><code># Monthly beer production in Australia 1992 and after
+beer_fpp2 &lt;- fpp2::ausbeer %&gt;%
+  window(start = 1992)  
+
+# Time series plot
+b1 &lt;- beer_fpp2 %&gt;% 
+  autoplot() 
+
+# Subseries plot
+b2 &lt;- beer_fpp2 %&gt;% 
+  ggsubseriesplot() 
+
+# Plot both
+plot_grid(b1, b2, ncol=1, rel_heights = c(1, 1.5))</code></pre>
 <p><img src="/post/2020-10-10-r-rmarkdown_files/figure-html/unnamed-chunk-15-1.png" width="672" /></p>
 </div>
+<div id="fpp3-method-plot-subseries-on-separate-axes" class="section level3">
+<h3>5.2 fpp3 Method: Plot Subseries on Separate Axes</h3>
+<pre class="r"><code># Monthly beer production in Australia 1992 and after
+beer_fpp3 &lt;- fpp2::ausbeer %&gt;%
+  as_tsibble() %&gt;%
+  filter(lubridate::year(index) &gt;= 1992)
+
+# Time series plot
+b3 &lt;- beer_fpp3 %&gt;% 
+  autoplot(value) 
+
+# Subseries plot
+b4 &lt;- beer_fpp3 %&gt;%
+  gg_subseries(value) 
+
+# Plot both
+plot_grid(b3, b4, ncol=1, rel_heights = c(1, 1.5))</code></pre>
+<p><img src="/post/2020-10-10-r-rmarkdown_files/figure-html/unnamed-chunk-16-1.png" width="672" /></p>
 </div>
-<div id="including-plots" class="section level1">
-<h1>Including Plots</h1>
-<p>You can also embed plots. See Figure <a href="#fig:pie">1</a> for example:</p>
-<pre class="r"><code>par(mar = c(0, 1, 0, 1))
-pie(
-  c(280, 60, 20),
-  c(&#39;Sky&#39;, &#39;Sunny side of pyramid&#39;, &#39;Shady side of pyramid&#39;),
-  col = c(&#39;#0292D8&#39;, &#39;#F7EA39&#39;, &#39;#C4B632&#39;),
-  init.angle = -50, border = NA
-)</code></pre>
-<div class="figure"><span id="fig:pie"></span>
-<img src="/post/2020-10-10-r-rmarkdown_files/figure-html/pie-1.png" alt="A fancy pie chart." width="672" />
-<p class="caption">
-Figure 1: A fancy pie chart.
-</p>
+<div id="timetk-method-plot-subseries-on-separate-axes" class="section level3">
+<h3>5.3 timetk Method: Plot Subseries on Separate Axes</h3>
+<pre class="r"><code># Monthly beer production in Australia 1992 and after
+ausbeer_tbl &lt;- fpp2::ausbeer %&gt;%
+  tk_tbl() %&gt;%
+  filter(year(index) &gt;= 1992) %&gt;%
+  mutate(index = as_date(index))
+# Time series plot
+b1 &lt;- ausbeer_tbl %&gt;%
+  plot_time_series(
+      .date_var = index,
+      .value    = value,
+      .interactive = FALSE,
+      .title = &quot;Monthly Aussie Beer Production&quot;
+      )
+
+# Subseries plot
+b2 &lt;- ausbeer_tbl %&gt;%
+  mutate(
+    quarter = str_c(&quot;Quarter &quot;, as.character(quarter(index)))
+    ) %&gt;%
+    plot_time_series(
+      .date_var = index,
+      .value = value,
+      .facet_vars = quarter,
+      .facet_ncol = 4, 
+      .color_var = quarter, 
+      .facet_scales = &quot;fixed&quot;,
+      .interactive = FALSE,
+      .legend_show = FALSE,
+      .title = &quot;Seasonal Plot&quot;
+      )
+
+# Plot it
+plot_grid(b1, b2, ncol=1, rel_heights = c(1, 1.5))</code></pre>
+<p><img src="/post/2020-10-10-r-rmarkdown_files/figure-html/unnamed-chunk-17-1.png" width="672" /></p>
+</div>
+</div>
+<div id="lag-plots" class="section level1">
+<h1>6. Lag Plots</h1>
+<p>Use lag plots to check for randomness. In particular, look for linear relationships indicating seasonality. The following examples use a dataset containing the annual oil production (millions of tons) in Saudi Arabia. Of interest is that this data is non-seasonal.</p>
+<div id="fpp2-method-plot-multiple-lags" class="section level3">
+<h3>6.1 fpp2 Method: Plot Multiple Lags</h3>
+<pre class="r"><code># Yearly plot
+o1 &lt;- fpp2::oil %&gt;%
+  autoplot()
+
+# Lag plot 
+o2 &lt;- gglagplot(oil, do.lines = FALSE) + 
+  theme(aspect.ratio=0.2)
+
+# Plot both
+plot_grid(o1, o2, ncol=1, rel_heights = c(1,2))</code></pre>
+<p><img src="/post/2020-10-10-r-rmarkdown_files/figure-html/unnamed-chunk-18-1.png" width="672" /></p>
+</div>
+<div id="fpp3-method-plot-multiple-lags" class="section level3">
+<h3>6.2 fpp3 Method: Plot Multiple Lags</h3>
+<pre class="r"><code># Yearly plot
+o1 &lt;- oil %&gt;%
+  as_tsibble() %&gt;%
+  autoplot(value, color=&quot;#0277bd&quot;)
+
+# Lag plot 
+o2 &lt;- oil %&gt;%
+  as_tsibble() %&gt;%
+  gg_lag(y = value, geom = &quot;point&quot;) + 
+  geom_point(aes(colour=.lag)) +
+  theme(aspect.ratio=0.2, legend.position = &quot;None&quot;) 
+  
+# Plot both
+plot_grid(o1, o2, ncol=1, rel_heights = c(1,2))</code></pre>
+<p><img src="/post/2020-10-10-r-rmarkdown_files/figure-html/unnamed-chunk-19-1.png" width="672" /></p>
+</div>
+<div id="timetk-method-hack-plot-multiple-lags" class="section level3">
+<h3>6.3 timetk Method (Hack?): Plot Multiple Lags</h3>
+<pre class="r"><code># Convert to tibble and augment with lag data
+oil_lag_long &lt;- oil %&gt;%
+  tk_tbl(rename_index = &quot;year&quot;) %&gt;%
+  tk_augment_lags(      # Add 9 lag columns of data
+      .value = value, 
+      .names = &quot;auto&quot;, 
+      .lags = 1:9) %&gt;%
+  pivot_longer(         
+      names_to = &quot;lag_id&quot;, 
+      values_to = &quot;lag_value&quot;, 
+      cols = value_lag1:value_lag9)  # Exclude year &amp; value
+
+# Check it out
+oil_lag_long %&gt;% tail(9)
+## # A tibble: 9 x 4
+##    year value lag_id     lag_value
+##   &lt;dbl&gt; &lt;dbl&gt; &lt;chr&gt;          &lt;dbl&gt;
+## 1  2013  542. value_lag1      550.
+## 2  2013  542. value_lag2      526.
+## 3  2013  542. value_lag3      474.
+## 4  2013  542. value_lag4      457.
+## 5  2013  542. value_lag5      510.
+## 6  2013  542. value_lag6      489.
+## 7  2013  542. value_lag7      509.
+## 8  2013  542. value_lag8      521.
+## 9  2013  542. value_lag9      500.</code></pre>
+<blockquote>
+<p>Now you can plot <code>value</code> vs <code>lag_value</code> facetted by <code>lag_id</code>.</p>
+</blockquote>
+<pre class="r"><code># Time series plot
+o1 &lt;- oil %&gt;%
+    tk_tbl(rename_index = &quot;year&quot;) %&gt;%  
+    mutate(year = ymd(year, truncated = 2L)) %&gt;%  
+    plot_time_series(
+        .date_var = year, 
+        .value = value,
+        .interactive = FALSE,
+        .title = &quot;Annual Saudi Oil Production&quot;)
+
+# Plot Multiple Lags
+o2 &lt;- oil_lag_long %&gt;%
+    plot_time_series(
+        .date_var = value,     # Use value instead of date
+        .value = lag_value,    # Use lag value to plot against
+        .facet_vars = lag_id,  # Facet by lag number
+        .facet_ncol = 3,
+        .interactive = FALSE, 
+        .smooth = FALSE,
+        .line_alpha = 0,      
+        .legend_show = FALSE,
+        .facet_scales = &quot;fixed&quot;,
+        .title = &quot;Lag Plot&quot;) + 
+    geom_point(aes(colour = lag_id)) + 
+    geom_abline(colour = &quot;gray&quot;, linetype = &quot;dashed&quot;) 
+
+# Plot both
+plot_grid(o1, o2, ncol=1, rel_heights = c(1,2))</code></pre>
+<p><img src="/post/2020-10-10-r-rmarkdown_files/figure-html/unnamed-chunk-21-1.png" width="768" /></p>
 </div>
 </div>
 
