@@ -85,7 +85,6 @@
 <ul>
 <li>Only the essential code has been provided</li>
 <li>Non-essential code such as plot titles and themes has been excluded</li>
-<li>All plots utilize the Business Science ggplot theme</li>
 </ul>
 </div>
 <div id="load-libraries" class="section level3">
@@ -252,7 +251,7 @@ aus_tbl_long %&gt;%
 <pre class="r"><code># Using fpp2
 aus_prod_ts %&gt;%  
   autoplot(facets=TRUE)   # With facetting</code></pre>
-<p><img src="/post/2020-10-10-r-rmarkdown_files/figure-html/unnamed-chunk-9-1.png" width="768" /></p>
+<p><img src="/post/2020-10-10-r-rmarkdown_files/figure-html/unnamed-chunk-9-1.png" width="672" /></p>
 </div>
 <div id="fpp3-method-plot-multiple-series-on-separate-axes" class="section level3">
 <h3>3.5 fpp3 Method: Plot Multiple Series On Separate Axes</h3>
@@ -262,7 +261,7 @@ aus_tsbl_long %&gt;%
   geom_line() + 
   theme(legend.position = &quot;None&quot;) +         # Remove legend
   facet_grid(vars(key), scales = &quot;free_y&quot;)  # With facetting</code></pre>
-<p><img src="/post/2020-10-10-r-rmarkdown_files/figure-html/unnamed-chunk-10-1.png" width="768" /></p>
+<p><img src="/post/2020-10-10-r-rmarkdown_files/figure-html/unnamed-chunk-10-1.png" width="672" /></p>
 </div>
 <div id="timetk-method-plot-multiple-series-on-separate-axes" class="section level3">
 <h3>3.6 timetk Method: Plot Multiple Series On Separate Axes</h3>
@@ -276,7 +275,7 @@ aus_tbl_long %&gt;%
         .interactive = FALSE,
         .legend_show = FALSE
     )</code></pre>
-<p><img src="/post/2020-10-10-r-rmarkdown_files/figure-html/unnamed-chunk-11-1.png" width="768" /></p>
+<p><img src="/post/2020-10-10-r-rmarkdown_files/figure-html/unnamed-chunk-11-1.png" width="672" /></p>
 </div>
 </div>
 <div id="seasonal-plots" class="section level1">
@@ -510,7 +509,7 @@ o2 &lt;- oil_lag_long %&gt;%
 
 # Plot both
 plot_grid(o1, o2, ncol=1, rel_heights = c(1,2))</code></pre>
-<p><img src="/post/2020-10-10-r-rmarkdown_files/figure-html/unnamed-chunk-21-1.png" width="768" /></p>
+<p><img src="/post/2020-10-10-r-rmarkdown_files/figure-html/unnamed-chunk-21-1.png" width="672" /></p>
 </div>
 </div>
 

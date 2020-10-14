@@ -28,7 +28,6 @@ Before we start, keep a few things in mind:
 
 - Only the essential code has been provided
 - Non-essential code such as plot titles and themes has been excluded
-- All plots utilize the Business Science ggplot theme
 
 ### 1.2 Load Libraries
 
@@ -159,7 +158,7 @@ aus_tbl_long %>%
 
 ### 3.4 fpp2 Method: Plot Multiple Series On Separate Axes
 
-```{r fig.height=6, fig.width=8, warning=FALSE}
+```{r fig.height=6, fig.width=7, warning=FALSE}
 # Using fpp2
 aus_prod_ts %>%  
   autoplot(facets=TRUE)   # With facetting
@@ -167,7 +166,7 @@ aus_prod_ts %>%
 
 ### 3.5 fpp3 Method: Plot Multiple Series On Separate Axes
 
-```{r fig.height=6, fig.width=8, warning=FALSE}
+```{r fig.height=6, fig.width=7, warning=FALSE}
 # Using fpp3
 aus_tsbl_long %>%
   ggplot(aes(x = index, y = value, group = key, color = key)) + 
@@ -178,7 +177,7 @@ aus_tsbl_long %>%
 
 ### 3.6 timetk Method: Plot Multiple Series On Separate Axes
 
-```{r fig.height=7, fig.width=8, warning=FALSE}
+```{r fig.height=7, fig.width=7, warning=FALSE}
 # Using timetk
 aus_tbl_long %>% 
     plot_time_series(
@@ -394,7 +393,7 @@ oil_lag_long %>% tail(9)
 
 > Now you can plot `value` vs `lag_value` facetted by `lag_id`. 
 
-```{r warning=FALSE, fig.height=6, fig.width=8}
+```{r warning=FALSE, fig.height=6, fig.width=7}
 # Time series plot
 o1 <- oil %>%
     tk_tbl(rename_index = "year") %>%  
@@ -424,6 +423,84 @@ o2 <- oil_lag_long %>%
 # Plot both
 plot_grid(o1, o2, ncol=1, rel_heights = c(1,2))
 ```
+
+# 7. Autocorrelation Function Plots
+
+The autocorrelation function measures the linear relationship between lagged values of a time series. The partial autocorrelation function measures the linear relationship between the correlations of the residuals.
+
+ACF
+
+- Visualizes how much the most recent value of the series is correlated with past values of the series (lags)
+- If the data has a trend, then the autocorrelations for small lags tend to be positive and large because observations nearby in time are also nearby in size
+- If the data are seasonal, then the autocorrelations will be larger for seasonal lags at multiples of seasonal frequency than other lags
+
+PACF
+
+- Visualizes whether certain lags are good for modeling or not; useful for data with a seasonal pattern
+- Removes dependence of lags on other lags by using the correlations of the residuals
+
+### 7.1 fpp2 Method: Plot ACF + PACF
+
+```{r}
+# ACF plot 
+o1 <- ggAcf(oil, lag.max = 20)
+
+# PACF plot
+o2 <- ggPacf(oil, lag.max = 20)
+
+# Plot both
+plot_grid(o1, o2, ncol = 1)
+```
+
+### 7.2 fpp3 Method: Plot ACF + PACF
+
+```{r}
+# Convert to tsibble
+oil_tsbl <- oil %>% as_tsibble()
+
+# ACF Plot
+o1 <- oil_tsbl %>%
+  ACF(var = value, lag_max = 20) %>%
+  autoplot()
+
+# PACF Plot
+o2 <- oil_tsbl %>%
+  PACF(var = value, lag_max = 20) %>%
+  autoplot() 
+
+# Plot both
+plot_grid(o1, o2, ncol = 1)
+```
+
+### 7.3 timetk Method: Plot ACF & PACF
+
+```{r}
+# Using timetk
+oil %>%
+    tk_tbl(rename_index = "year") %>%
+    plot_acf_diagnostics(
+        .date_var = year,
+        .value = value,
+        .lags = 20,
+        .show_white_noise_bars = TRUE, 
+        .interactive = FALSE
+    )
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
