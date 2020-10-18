@@ -1,5 +1,5 @@
 ---
-title: "Tidy Forecasting: How to Visualize Time Series"
+title: "Tidy Forecasting in R: Visualizing Time Series"
 author: "Joon Im"
 date: 2020-10-10
 categories: ["R","Forecasting","Time Series"]
@@ -428,13 +428,13 @@ plot_grid(o1, o2, ncol=1, rel_heights = c(1,2))
 
 The autocorrelation function measures the linear relationship between lagged values of a time series. The partial autocorrelation function measures the linear relationship between the correlations of the residuals.
 
-ACF
+#### ACF
 
 - Visualizes how much the most recent value of the series is correlated with past values of the series (lags)
 - If the data has a trend, then the autocorrelations for small lags tend to be positive and large because observations nearby in time are also nearby in size
 - If the data are seasonal, then the autocorrelations will be larger for seasonal lags at multiples of seasonal frequency than other lags
 
-PACF
+#### PACF
 
 - Visualizes whether certain lags are good for modeling or not; useful for data with a seasonal pattern
 - Removes dependence of lags on other lags by using the correlations of the residuals
@@ -487,11 +487,15 @@ oil %>%
     )
 ```
 
+# 8. Summary
 
+Although all three frameworks have similar functionality when it relates to visualization as they all use `ggplot` as their foundation, there are some important factors to consider.
 
+A major possible strength or downside of `fpp2` is that it uses the older base `ts` objects. However, it is no longer maintained and the author recommends using `fpp3` instead. 
 
+The newer `fpp3` framework uses similar code to `fpp2` but has been updated to work with the `tidyverse` suite of data manipulation tools. However, I've found the `tsibble` object acts a bit unexpectedly sometimes so I wouldn't consider it fully compatible with the `tidyverse` suite. Be especially careful when converting between different time series objects. 
 
-
+The newest contender is `modeltime` which also works with the `tidyverse` but is better suited for data manipulation & augmentation with its companion `timetk` library. It uses the `tibble` format and can coerce a range of different time series objects (`xts`, `zoo`, `ts`) using function `tk_tbl()`. One major advantage is that visualizations can be made either static (`ggplot`) or interactive (`plotly`). 
 
 
 

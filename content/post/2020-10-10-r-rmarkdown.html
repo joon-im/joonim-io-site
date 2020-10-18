@@ -1,5 +1,5 @@
 ---
-title: "Tidy Forecasting: How to Visualize Time Series"
+title: "Tidy Forecasting in R: Visualizing Time Series"
 author: "Joon Im"
 date: 2020-10-10
 categories: ["R","Forecasting","Time Series"]
@@ -446,4 +446,75 @@ o2 &lt;- oil_lag_long %&gt;%
 plot_grid(o1, o2, ncol=1, rel_heights = c(1,2))</code></pre>
 <p><img src="/post/2020-10-10-r-rmarkdown_files/figure-html/unnamed-chunk-21-1.png" width="672" /></p>
 </div>
+</div>
+<div id="autocorrelation-function-plots" class="section level1">
+<h1>7. Autocorrelation Function Plots</h1>
+<p>The autocorrelation function measures the linear relationship between lagged values of a time series. The partial autocorrelation function measures the linear relationship between the correlations of the residuals.</p>
+<div id="acf" class="section level4">
+<h4>ACF</h4>
+<ul>
+<li>Visualizes how much the most recent value of the series is correlated with past values of the series (lags)</li>
+<li>If the data has a trend, then the autocorrelations for small lags tend to be positive and large because observations nearby in time are also nearby in size</li>
+<li>If the data are seasonal, then the autocorrelations will be larger for seasonal lags at multiples of seasonal frequency than other lags</li>
+</ul>
+</div>
+<div id="pacf" class="section level4">
+<h4>PACF</h4>
+<ul>
+<li>Visualizes whether certain lags are good for modeling or not; useful for data with a seasonal pattern</li>
+<li>Removes dependence of lags on other lags by using the correlations of the residuals</li>
+</ul>
+</div>
+<div id="fpp2-method-plot-acf-pacf" class="section level3">
+<h3>7.1 fpp2 Method: Plot ACF + PACF</h3>
+<pre class="r"><code># ACF plot 
+o1 &lt;- ggAcf(oil, lag.max = 20)
+
+# PACF plot
+o2 &lt;- ggPacf(oil, lag.max = 20)
+
+# Plot both
+plot_grid(o1, o2, ncol = 1)</code></pre>
+<p><img src="/post/2020-10-10-r-rmarkdown_files/figure-html/unnamed-chunk-22-1.png" width="672" /></p>
+</div>
+<div id="fpp3-method-plot-acf-pacf" class="section level3">
+<h3>7.2 fpp3 Method: Plot ACF + PACF</h3>
+<pre class="r"><code># Convert to tsibble
+oil_tsbl &lt;- oil %&gt;% as_tsibble()
+
+# ACF Plot
+o1 &lt;- oil_tsbl %&gt;%
+  ACF(var = value, lag_max = 20) %&gt;%
+  autoplot()
+
+# PACF Plot
+o2 &lt;- oil_tsbl %&gt;%
+  PACF(var = value, lag_max = 20) %&gt;%
+  autoplot() 
+
+# Plot both
+plot_grid(o1, o2, ncol = 1)</code></pre>
+<p><img src="/post/2020-10-10-r-rmarkdown_files/figure-html/unnamed-chunk-23-1.png" width="672" /></p>
+</div>
+<div id="timetk-method-plot-acf-pacf" class="section level3">
+<h3>7.3 timetk Method: Plot ACF &amp; PACF</h3>
+<pre class="r"><code># Using timetk
+oil %&gt;%
+    tk_tbl(rename_index = &quot;year&quot;) %&gt;%
+    plot_acf_diagnostics(
+        .date_var = year,
+        .value = value,
+        .lags = 20,
+        .show_white_noise_bars = TRUE, 
+        .interactive = FALSE
+    )</code></pre>
+<p><img src="/post/2020-10-10-r-rmarkdown_files/figure-html/unnamed-chunk-24-1.png" width="672" /></p>
+</div>
+</div>
+<div id="summary" class="section level1">
+<h1>8. Summary</h1>
+<p>Although all three frameworks have similar functionality when it relates to visualization as they all use <code>ggplot</code> as their foundation, there are some important factors to consider.</p>
+<p>A major possible strength or downside of <code>fpp2</code> is that it uses the older base <code>ts</code> objects. However, it is no longer maintained and the author recommends using <code>fpp3</code> instead.</p>
+<p>The newer <code>fpp3</code> framework uses similar code to <code>fpp2</code> but has been updated to work with the <code>tidyverse</code> suite of data manipulation tools. However, I’ve found the <code>tsibble</code> object acts a bit unexpectedly sometimes so I wouldn’t consider it fully compatible with the <code>tidyverse</code> suite. Be especially careful when converting between different time series objects.</p>
+<p>The newest contender is <code>modeltime</code> which also works with the <code>tidyverse</code> but is better suited for data manipulation &amp; augmentation with its companion <code>timetk</code> library. It uses the <code>tibble</code> format and can coerce a range of different time series objects (<code>xts</code>, <code>zoo</code>, <code>ts</code>) using function <code>tk_tbl()</code>. One major advantage is that visualizations can be made either static (<code>ggplot</code>) or interactive (<code>plotly</code>).</p>
 </div>
