@@ -8,11 +8,11 @@
     <language>en-us</language>
     <lastBuildDate>Sat, 10 Oct 2020 00:00:00 +0000</lastBuildDate><atom:link href="/categories/time-series/index.xml" rel="self" type="application/rss+xml" />
     <item>
-      <title>Tidy Forecasting: How to Visualize Time Series</title>
-      <link>/2020/10/10/tidy-forecasting-how-to-visualize-time-series/</link>
+      <title>Tidy Forecasting in R: Visualizing Time Series</title>
+      <link>/2020/10/10/tidy-forecasting-in-r-visualizing-time-series/</link>
       <pubDate>Sat, 10 Oct 2020 00:00:00 +0000</pubDate>
       
-      <guid>/2020/10/10/tidy-forecasting-how-to-visualize-time-series/</guid>
+      <guid>/2020/10/10/tidy-forecasting-in-r-visualizing-time-series/</guid>
       <description>1. Set Up 1.1 Introduction There are a number of forecasting packages written in R to choose from, each with their own pros and cons.
 For almost a decade, the forecast library from the fpp2 forecasting framework has been a major force in the time series world. However, within the last year or so an official update has been released. This new fpp3 framework utilizes a package called fable that follows tidy methodology as opposed to using base R code.</description>
     </item>

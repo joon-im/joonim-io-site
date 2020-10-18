@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+    <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Hugo 0.75.1" />
+
+
+<title>Tidy Forecasting in R: Visualizing Time Series - Joon&#39;s Blog</title>
+<meta property="og:title" content="Tidy Forecasting in R: Visualizing Time Series - Joon&#39;s Blog">
+
+
+  <link href='/favicon.ico' rel='icon' type='image/x-icon'/>
+
+
+
+  
+
+
+
+
+
+
+
+
+<link href='//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css' rel='stylesheet' type='text/css' />
+
+
+
+<link rel="stylesheet" href="/css/fonts.css" media="all">
+<link rel="stylesheet" href="/css/main.css" media="all">
+
+
+
+  </head>
+  <body>
+    <div class="wrapper">
+      <header class="header">
+        <nav class="nav">
+  <a href="/" class="nav-logo">
+    <img src="/images/logo.png"
+         width="50"
+         height="50"
+         alt="Logo">
+  </a>
+
+  <ul class="nav-links">
+    
+    <li><a href="/about/">About</a></li>
+    
+    <li><a href="https://github.com/joon-im">GitHub</a></li>
+    
+  </ul>
+</nav>
+
+      </header>
+
+
+<main class="content" role="main">
+
+  <article class="article">
+    
+    <span class="article-duration">12 min read</span>
+    
+
+    <h1 class="article-title">Tidy Forecasting in R: Visualizing Time Series</h1>
+
+    
+    <span class="article-date">2020-10-10</span>
+    
+
+    <div class="article-content">
+      
+
+
+<div id="set-up" class="section level1">
+<h1>1. Set Up</h1>
+<div id="introduction" class="section level3">
+<h3>1.1 Introduction</h3>
+<p>There are a number of forecasting packages written in R to choose from, each with their own pros and cons.</p>
+<p>For almost a decade, the <code>forecast</code> library from the <code>fpp2</code> forecasting framework has been a major force in the time series world. However, within the last year or so an official update has been released. This new <code>fpp3</code> framework utilizes a package called <code>fable</code> that follows tidy methodology as opposed to using base R code.</p>
+<p>More recently, the <code>modeltime</code> library has been released and this also follows tidy methods. It has a companion package <code>timetk</code> for data manipulation and visualization which is also written by the same author.</p>
+<p>The following is a code comparison of various time series visualizations between these frameworks: <code>fpp2</code>, <code>fpp3</code> and <code>timetk/modeltime</code>.</p>
+</div>
+<div id="load-libraries" class="section level3">
+<h3>1.2 Load Libraries</h3>
+<pre class="r"><code># Load libraries
+library(fpp2)         # The OG of forecasting
+library(fpp3)         # Official update to fpp2
+library(timetk)       # Companion to modeltime
+library(tidyverse)    # Data manipulation tools
+library(cowplot)      # Add-on for arranging plots</code></pre>
+</div>
+</div>
+<div id="convert-time-series-objects" class="section level1">
+<h1>2. Convert Time Series Objects</h1>
+<ul>
+<li>The base ts object is used by <code>forecast</code> &amp; <code>fpp2</code></li>
+<li>The special <code>tsibble</code> object is used by <code>fable</code> &amp; <code>fpp3</code></li>
+<li>The standard <code>tibble</code> object is used by <code>timetk</code> &amp; <code>modeltime</code></li>
+</ul>
+<div id="load-data" class="section level3">
+<h3>2.1 Load Data</h3>
+<p>For the next few visualizations, we will utilize a dataset containing quarterly production values of certain commodities in Australia.</p>
+<pre class="r"><code># Quarterly Australian production data as tibble
+aus &lt;- tsibbledata::aus_production %&gt;% as_tibble()
+
+# Check structure
+aus %&gt;% str()
+## tibble [218 × 7] (S3: tbl_df/tbl/data.frame)
+##  $ Quarter    : qtr [1:218] 1956 Q1, 1956 Q2, 1956 Q3, 1956 Q4, 1957 Q1, 1957 Q2, 1957...
+##  $ Beer       : num [1:218] 284 213 227 308 262 228 236 320 272 233 ...
+##  $ Tobacco    : num [1:218] 5225 5178 5297 5681 5577 ...
+##  $ Bricks     : num [1:218] 189 204 208 197 187 214 227 222 199 229 ...
+##  $ Cement     : num [1:218] 465 532 561 570 529 604 603 582 554 620 ...
+##  $ Electricity: num [1:218] 3923 4436 4806 4418 4339 ...
+##  $ Gas        : num [1:218] 5 6 7 6 5 7 7 6 5 7 ...</code></pre>
+<p><em>Always check the class of your time series data.</em></p>
+</div>
+<div id="fpp2-method-tibble-to-ts" class="section level3">
+<h3>2.2 fpp2 Method: tibble to ts</h3>
+<pre class="r"><code># Convert tibble to time series object
+aus_prod_ts &lt;- ts(aus[, 2:7],  # Choose columns
+                    start = c(1956, 1),  # Choose start date
+                    end = c(2010, 2),    # Choose end date
+                    frequency = 4)       # Choose frequency per yr
+# Check it out
+aus_prod_ts %&gt;% head()
+##         Beer Tobacco Bricks Cement Electricity Gas
+## 1956 Q1  284    5225    189    465        3923   5
+## 1956 Q2  213    5178    204    532        4436   6
+## 1956 Q3  227    5297    208    561        4806   7
+## 1956 Q4  308    5681    197    570        4418   6
+## 1957 Q1  262    5577    187    529        4339   5
+## 1957 Q2  228    5651    214    604        4811   7</code></pre>
+</div>
+<div id="fpp3-method-tibblets-to-tsibble" class="section level3">
+<h3>2.3 fpp3 Method: tibble/ts to tsibble</h3>
+<pre class="r"><code># Convert ts to tsibble, keep wide format
+aus_tsbl_wide &lt;- aus_prod_ts %&gt;%    # TS object
+  as_tsibble(index = &quot;index&quot;,           # Set index column
+             pivot_longer = FALSE)      # Wide format
+
+# Check it out
+aus_tsbl_wide %&gt;% head()
+## # A tsibble: 6 x 7 [1Q]
+##     index  Beer Tobacco Bricks Cement Electricity   Gas
+##     &lt;qtr&gt; &lt;dbl&gt;   &lt;dbl&gt;  &lt;dbl&gt;  &lt;dbl&gt;       &lt;dbl&gt; &lt;dbl&gt;
+## 1 1956 Q1   284    5225    189    465        3923     5
+## 2 1956 Q2   213    5178    204    532        4436     6
+## 3 1956 Q3   227    5297    208    561        4806     7
+## 4 1956 Q4   308    5681    197    570        4418     6
+## 5 1957 Q1   262    5577    187    529        4339     5
+## 6 1957 Q2   228    5651    214    604        4811     7</code></pre>
+<pre class="r"><code># Convert ts to tsibble, pivot to long format
+aus_tsbl_long &lt;- aus_prod_ts %&gt;%    # TS object
+  as_tsibble(index = &quot;index&quot;,           # Set index column
+             pivot_longer = TRUE)       # Long format
+
+# Check it out
+aus_tsbl_long %&gt;% head()
+## # A tsibble: 6 x 3 [1Q]
+## # Key:       key [1]
+##     index key   value
+##     &lt;qtr&gt; &lt;chr&gt; &lt;dbl&gt;
+## 1 1956 Q1 Beer    284
+## 2 1956 Q2 Beer    213
+## 3 1956 Q3 Beer    227
+## 4 1956 Q4 Beer    308
+## 5 1957 Q1 Beer    262
+## 6 1957 Q2 Beer    228</code></pre>
+</div>
+<div id="timetk-method-from-tsibblets-to-tibble" class="section level3">
+<h3>2.4 timetk Method: From tsibble/ts to tibble</h3>
+<pre class="r"><code># Convert tsibble to tibble, keep wide format
+aus_tbl_wide &lt;- tsibbledata::aus_production %&gt;% 
+    tk_tbl(preserve_index = FALSE) %&gt;%
+    mutate(Quarter = as_date(as.POSIXct.Date(Quarter))) 
+
+# Check it out
+aus_tbl_wide %&gt;% head()
+## # A tibble: 6 x 7
+##   Quarter     Beer Tobacco Bricks Cement Electricity   Gas
+##   &lt;date&gt;     &lt;dbl&gt;   &lt;dbl&gt;  &lt;dbl&gt;  &lt;dbl&gt;       &lt;dbl&gt; &lt;dbl&gt;
+## 1 1955-12-31   284    5225    189    465        3923     5
+## 2 1956-03-31   213    5178    204    532        4436     6
+## 3 1956-06-30   227    5297    208    561        4806     7
+## 4 1956-09-30   308    5681    197    570        4418     6
+## 5 1956-12-31   262    5577    187    529        4339     5
+## 6 1957-03-31   228    5651    214    604        4811     7</code></pre>
+<pre class="r"><code># Convert tsibble to tibble, pivot to long format
+aus_tbl_long &lt;- tsibbledata::aus_production %&gt;% 
+    tk_tbl(preserve_index = FALSE) %&gt;%
+    mutate(date = as_date(as.POSIXct.Date(Quarter))) %&gt;%
+    pivot_longer(cols = c(&quot;Beer&quot;:&quot;Gas&quot;))
+
+# Check it out
+aus_tbl_long %&gt;% head()
+## # A tibble: 6 x 4
+##   Quarter date       name        value
+##     &lt;qtr&gt; &lt;date&gt;     &lt;chr&gt;       &lt;dbl&gt;
+## 1 1956 Q1 1955-12-31 Beer          284
+## 2 1956 Q1 1955-12-31 Tobacco      5225
+## 3 1956 Q1 1955-12-31 Bricks        189
+## 4 1956 Q1 1955-12-31 Cement        465
+## 5 1956 Q1 1955-12-31 Electricity  3923
+## 6 1956 Q1 1955-12-31 Gas             5</code></pre>
+</div>
+</div>
+<div id="time-series-plots" class="section level1">
+<h1>3. Time Series Plots</h1>
+<p>When analyzing time series plots, look for the following patterns:</p>
+<ul>
+<li><strong>Trend</strong>: A long-term increase or decrease in the data; a “changing direction”.</li>
+<li><strong>Seasonality</strong>: A seasonal pattern of a fixed and known period. If the frequency is unchanging and associated with some aspect of the calendar, then the pattern is seasonal.</li>
+<li><strong>Cycle</strong>: A rise and fall pattern not of a fixed frequency. If the fluctuations are not of a fixed frequency then they are cyclic.</li>
+<li><strong>Seasonal vs Cyclic</strong>: Cyclic patterns are longer and more variable than seasonal patterns in general.</li>
+</ul>
+<div id="fpp2-method-plot-multiple-series-on-same-axes" class="section level3">
+<h3>3.1 fpp2 Method: Plot Multiple Series On Same Axes</h3>
+<pre class="r"><code># Using fpp2
+aus_prod_ts %&gt;%               # TS object
+  autoplot(facets=FALSE) +    # No facetting
+  ggtitle(&quot;Quarterly Production of Select Australian Commodities&quot;)</code></pre>
+<p><img src="/post/2020-10-10-r-rmarkdown_files/figure-html/unnamed-chunk-6-1.png" width="672" /></p>
+</div>
+<div id="fpp3-method-plot-multiple-series-on-same-axes" class="section level3">
+<h3>3.2 fpp3 Method: Plot Multiple Series On Same Axes</h3>
+<pre class="r"><code># Using fpp3
+aus_tsbl_long %&gt;%    # Data in long format
+  autoplot(value)</code></pre>
+<p><img src="/post/2020-10-10-r-rmarkdown_files/figure-html/unnamed-chunk-7-1.png" width="672" /></p>
+</div>
+<div id="ggplot-method-plot-multiple-series-on-same-axes" class="section level3">
+<h3>3.3 ggplot Method: Plot Multiple Series On Same Axes</h3>
+<p>Plots on the same axes is not a feature included in <code>timetk</code> as of this writing. The <code>ggplot</code> &amp; <code>fpp3</code> methods can be used to achieve the same result.</p>
+<pre class="r"><code># Using ggplot
+aus_tbl_long %&gt;%
+    ggplot(aes(date, value, group = name, color = name)) +
+    geom_line()</code></pre>
+<p><img src="/post/2020-10-10-r-rmarkdown_files/figure-html/unnamed-chunk-8-1.png" width="672" /></p>
+<hr />
+</div>
+<div id="fpp2-method-plot-multiple-series-on-separate-axes" class="section level3">
+<h3>3.4 fpp2 Method: Plot Multiple Series On Separate Axes</h3>
+<pre class="r"><code># Using fpp2
+aus_prod_ts %&gt;%  
+  autoplot(facets=TRUE)   # With facetting</code></pre>
+<p><img src="/post/2020-10-10-r-rmarkdown_files/figure-html/unnamed-chunk-9-1.png" width="672" /></p>
+</div>
+<div id="fpp3-method-plot-multiple-series-on-separate-axes" class="section level3">
+<h3>3.5 fpp3 Method: Plot Multiple Series On Separate Axes</h3>
+<pre class="r"><code># Using fpp3
+aus_tsbl_long %&gt;%
+  ggplot(aes(x = index, y = value, group = key, color = key)) + 
+  geom_line() + 
+  theme(legend.position = &quot;None&quot;) +         # Remove legend
+  facet_grid(vars(key), scales = &quot;free_y&quot;)  # With facetting</code></pre>
+<p><img src="/post/2020-10-10-r-rmarkdown_files/figure-html/unnamed-chunk-10-1.png" width="672" /></p>
+</div>
+<div id="timetk-method-plot-multiple-series-on-separate-axes" class="section level3">
+<h3>3.6 timetk Method: Plot Multiple Series On Separate Axes</h3>
+<pre class="r"><code># Using timetk
+aus_tbl_long %&gt;% 
+    plot_time_series(
+        .date_var = date,
+        .value = value,
+        .facet_vars = c(name), # Group by these columns
+        .color_var = name, 
+        .interactive = FALSE,
+        .legend_show = FALSE
+    )</code></pre>
+<p><img src="/post/2020-10-10-r-rmarkdown_files/figure-html/unnamed-chunk-11-1.png" width="672" /></p>
+</div>
+</div>
+<div id="seasonal-plots" class="section level1">
+<h1>4. Seasonal Plots</h1>
+<p>Use seasonal plots for identifying time periods in which the patterns change. The following examples will use a dataset containing the number of anti-diabetic scripts given in Australia over a period of time.</p>
+<div id="fpp2-method-plot-individual-seasons" class="section level3">
+<h3>4.1 fpp2 Method: Plot Individual Seasons</h3>
+<pre class="r"><code># Monthly plot
+a1 &lt;- fpp2::a10 %&gt;%
+  autoplot()
+
+# Seasonal plot
+a2 &lt;- a10 %&gt;%
+  ggseasonplot(year.labels.left = TRUE,   # Add labels
+               year.labels = TRUE)
+
+# Arrangement of plots
+plot_grid(a1, a2, ncol=1, rel_heights = c(1, 1.5))</code></pre>
+<p><img src="/post/2020-10-10-r-rmarkdown_files/figure-html/unnamed-chunk-12-1.png" width="672" /></p>
+</div>
+<div id="fpp3-method-plot-individual-seasons" class="section level3">
+<h3>4.2 fpp3 Method: Plot Individual Seasons</h3>
+<pre class="r"><code># Seasonal plot
+a10 %&gt;%
+  as_tsibble() %&gt;%
+  gg_season(value, labels=&quot;both&quot;)   # Add labels</code></pre>
+<p><img src="/post/2020-10-10-r-rmarkdown_files/figure-html/unnamed-chunk-13-1.png" width="672" /></p>
+</div>
+<div id="ggplot-method-plot-individual-seasons" class="section level3">
+<h3>4.3 ggplot Method: Plot Individual Seasons</h3>
+<p>Plots including each season is not a feature included in <code>timetk</code> as of this writing. The <code>ggplot</code> &amp; <code>fpp3</code> methods can be used to achieve the same result.</p>
+<pre class="r"><code># Convert ts to tibble
+a10_tbl &lt;- fpp2::a10 %&gt;%
+  tk_tbl()
+
+# New time-based features to group by
+a10_tbl_add &lt;- a10_tbl %&gt;% 
+  mutate( 
+      month = factor(month(index, label = TRUE)), # x-axis
+      year = factor(year(index))  # Grouped on y-axis
+  )
+
+# Seasonal plot
+a10_tbl_add %&gt;%
+  ggplot(aes(x = month, y = value, 
+             group = year, color = year)) + 
+  geom_line() + 
+  geom_text(
+    data = a10_tbl_add %&gt;% filter(month == min(month)),
+    aes(label = year, x = month, y = value),
+    nudge_x = -0.3) + 
+  geom_text(
+    data = a10_tbl_add %&gt;% filter(month == max(month)),
+    aes(label = year, x = month, y = value),
+    nudge_x = 0.3) + 
+  guides(color = FALSE) + 
+  theme_tq() + 
+  scale_color_tq()</code></pre>
+<p><img src="/post/2020-10-10-r-rmarkdown_files/figure-html/unnamed-chunk-14-1.png" width="672" /></p>
+</div>
+</div>
+<div id="subseries-plots" class="section level1">
+<h1>5. Subseries Plots</h1>
+<p>Use subseries plots to view seasonal changes over time. The following examples will use a dataset containing the monthly production of beer in Australia starting in 1992.</p>
+<div id="fpp2-method-plot-subseries-on-same-axes" class="section level3">
+<h3>5.1 fpp2 Method: Plot Subseries on Same Axes</h3>
+<pre class="r"><code># Monthly beer production in Australia 1992 and after
+beer_fpp2 &lt;- fpp2::ausbeer %&gt;%
+  window(start = 1992)  
+
+# Time series plot
+b1 &lt;- beer_fpp2 %&gt;% 
+  autoplot() 
+
+# Subseries plot
+b2 &lt;- beer_fpp2 %&gt;% 
+  ggsubseriesplot() 
+
+# Plot both
+plot_grid(b1, b2, ncol=1, rel_heights = c(1, 1.5))</code></pre>
+<p><img src="/post/2020-10-10-r-rmarkdown_files/figure-html/unnamed-chunk-15-1.png" width="672" /></p>
+</div>
+<div id="fpp3-method-plot-subseries-on-separate-axes" class="section level3">
+<h3>5.2 fpp3 Method: Plot Subseries on Separate Axes</h3>
+<pre class="r"><code># Monthly beer production in Australia 1992 and after
+beer_fpp3 &lt;- fpp2::ausbeer %&gt;%
+  as_tsibble() %&gt;%
+  filter(lubridate::year(index) &gt;= 1992)
+
+# Time series plot
+b3 &lt;- beer_fpp3 %&gt;% 
+  autoplot(value) 
+
+# Subseries plot
+b4 &lt;- beer_fpp3 %&gt;%
+  gg_subseries(value) 
+
+# Plot both
+plot_grid(b3, b4, ncol=1, rel_heights = c(1, 1.5))</code></pre>
+<p><img src="/post/2020-10-10-r-rmarkdown_files/figure-html/unnamed-chunk-16-1.png" width="672" /></p>
+</div>
+<div id="timetk-method-plot-subseries-on-separate-axes" class="section level3">
+<h3>5.3 timetk Method: Plot Subseries on Separate Axes</h3>
+<pre class="r"><code># Monthly beer production in Australia 1992 and after
+ausbeer_tbl &lt;- fpp2::ausbeer %&gt;%
+  tk_tbl() %&gt;%
+  filter(year(index) &gt;= 1992) %&gt;%
+  mutate(index = as_date(index))
+# Time series plot
+b1 &lt;- ausbeer_tbl %&gt;%
+  plot_time_series(
+      .date_var = index,
+      .value    = value,
+      .interactive = FALSE,
+      .title = &quot;Monthly Aussie Beer Production&quot;
+      )
+
+# Subseries plot
+b2 &lt;- ausbeer_tbl %&gt;%
+  mutate(
+    quarter = str_c(&quot;Quarter &quot;, as.character(quarter(index)))
+    ) %&gt;%
+    plot_time_series(
+      .date_var = index,
+      .value = value,
+      .facet_vars = quarter,
+      .facet_ncol = 4, 
+      .color_var = quarter, 
+      .facet_scales = &quot;fixed&quot;,
+      .interactive = FALSE,
+      .legend_show = FALSE,
+      .title = &quot;Seasonal Plot&quot;
+      )
+
+# Plot it
+plot_grid(b1, b2, ncol=1, rel_heights = c(1, 1.5))</code></pre>
+<p><img src="/post/2020-10-10-r-rmarkdown_files/figure-html/unnamed-chunk-17-1.png" width="672" /></p>
+</div>
+</div>
+<div id="lag-plots" class="section level1">
+<h1>6. Lag Plots</h1>
+<p>Use lag plots to check for randomness. In particular, look for linear relationships indicating seasonality. The following examples use a dataset containing the annual oil production (millions of tons) in Saudi Arabia. Of interest is that this data is non-seasonal.</p>
+<div id="fpp2-method-plot-multiple-lags" class="section level3">
+<h3>6.1 fpp2 Method: Plot Multiple Lags</h3>
+<pre class="r"><code># Yearly plot
+o1 &lt;- fpp2::oil %&gt;%
+  autoplot()
+
+# Lag plot 
+o2 &lt;- gglagplot(oil, do.lines = FALSE) + 
+  theme(aspect.ratio=0.2)
+
+# Plot both
+plot_grid(o1, o2, ncol=1, rel_heights = c(1,2))</code></pre>
+<p><img src="/post/2020-10-10-r-rmarkdown_files/figure-html/unnamed-chunk-18-1.png" width="672" /></p>
+</div>
+<div id="fpp3-method-plot-multiple-lags" class="section level3">
+<h3>6.2 fpp3 Method: Plot Multiple Lags</h3>
+<pre class="r"><code># Yearly plot
+o1 &lt;- oil %&gt;%
+  as_tsibble() %&gt;%
+  autoplot(value, color=&quot;#0277bd&quot;)
+
+# Lag plot 
+o2 &lt;- oil %&gt;%
+  as_tsibble() %&gt;%
+  gg_lag(y = value, geom = &quot;point&quot;) + 
+  geom_point(aes(colour=.lag)) +
+  theme(aspect.ratio=0.2, legend.position = &quot;None&quot;) 
+  
+# Plot both
+plot_grid(o1, o2, ncol=1, rel_heights = c(1,2))</code></pre>
+<p><img src="/post/2020-10-10-r-rmarkdown_files/figure-html/unnamed-chunk-19-1.png" width="672" /></p>
+</div>
+<div id="timetk-method-hack-plot-multiple-lags" class="section level3">
+<h3>6.3 timetk Method (Hack?): Plot Multiple Lags</h3>
+<pre class="r"><code># Convert to tibble and augment with lag data
+oil_lag_long &lt;- oil %&gt;%
+  tk_tbl(rename_index = &quot;year&quot;) %&gt;%
+  tk_augment_lags(      # Add 9 lag columns of data
+      .value = value, 
+      .names = &quot;auto&quot;, 
+      .lags = 1:9) %&gt;%
+  pivot_longer(         
+      names_to = &quot;lag_id&quot;, 
+      values_to = &quot;lag_value&quot;, 
+      cols = value_lag1:value_lag9)  # Exclude year &amp; value
+
+# Check it out
+oil_lag_long %&gt;% tail(9)
+## # A tibble: 9 x 4
+##    year value lag_id     lag_value
+##   &lt;dbl&gt; &lt;dbl&gt; &lt;chr&gt;          &lt;dbl&gt;
+## 1  2013  542. value_lag1      550.
+## 2  2013  542. value_lag2      526.
+## 3  2013  542. value_lag3      474.
+## 4  2013  542. value_lag4      457.
+## 5  2013  542. value_lag5      510.
+## 6  2013  542. value_lag6      489.
+## 7  2013  542. value_lag7      509.
+## 8  2013  542. value_lag8      521.
+## 9  2013  542. value_lag9      500.</code></pre>
+<blockquote>
+<p>Now you can plot <code>value</code> vs <code>lag_value</code> facetted by <code>lag_id</code>.</p>
+</blockquote>
+<pre class="r"><code># Time series plot
+o1 &lt;- oil %&gt;%
+    tk_tbl(rename_index = &quot;year&quot;) %&gt;%  
+    mutate(year = ymd(year, truncated = 2L)) %&gt;%  
+    plot_time_series(
+        .date_var = year, 
+        .value = value,
+        .interactive = FALSE,
+        .title = &quot;Annual Saudi Oil Production&quot;)
+
+# Plot Multiple Lags
+o2 &lt;- oil_lag_long %&gt;%
+    plot_time_series(
+        .date_var = value,     # Use value instead of date
+        .value = lag_value,    # Use lag value to plot against
+        .facet_vars = lag_id,  # Facet by lag number
+        .facet_ncol = 3,
+        .interactive = FALSE, 
+        .smooth = FALSE,
+        .line_alpha = 0,      
+        .legend_show = FALSE,
+        .facet_scales = &quot;fixed&quot;,
+        .title = &quot;Lag Plot&quot;) + 
+    geom_point(aes(colour = lag_id)) + 
+    geom_abline(colour = &quot;gray&quot;, linetype = &quot;dashed&quot;) 
+
+# Plot both
+plot_grid(o1, o2, ncol=1, rel_heights = c(1,2))</code></pre>
+<p><img src="/post/2020-10-10-r-rmarkdown_files/figure-html/unnamed-chunk-21-1.png" width="672" /></p>
+</div>
+</div>
+<div id="autocorrelation-function-plots" class="section level1">
+<h1>7. Autocorrelation Function Plots</h1>
+<p>The autocorrelation function measures the linear relationship between lagged values of a time series. The partial autocorrelation function measures the linear relationship between the correlations of the residuals.</p>
+<div id="acf" class="section level4">
+<h4>ACF</h4>
+<ul>
+<li>Visualizes how much the most recent value of the series is correlated with past values of the series (lags)</li>
+<li>If the data has a trend, then the autocorrelations for small lags tend to be positive and large because observations nearby in time are also nearby in size</li>
+<li>If the data are seasonal, then the autocorrelations will be larger for seasonal lags at multiples of seasonal frequency than other lags</li>
+</ul>
+</div>
+<div id="pacf" class="section level4">
+<h4>PACF</h4>
+<ul>
+<li>Visualizes whether certain lags are good for modeling or not; useful for data with a seasonal pattern</li>
+<li>Removes dependence of lags on other lags by using the correlations of the residuals</li>
+</ul>
+</div>
+<div id="fpp2-method-plot-acf-pacf" class="section level3">
+<h3>7.1 fpp2 Method: Plot ACF + PACF</h3>
+<pre class="r"><code># ACF plot 
+o1 &lt;- ggAcf(oil, lag.max = 20)
+
+# PACF plot
+o2 &lt;- ggPacf(oil, lag.max = 20)
+
+# Plot both
+plot_grid(o1, o2, ncol = 1)</code></pre>
+<p><img src="/post/2020-10-10-r-rmarkdown_files/figure-html/unnamed-chunk-22-1.png" width="672" /></p>
+</div>
+<div id="fpp3-method-plot-acf-pacf" class="section level3">
+<h3>7.2 fpp3 Method: Plot ACF + PACF</h3>
+<pre class="r"><code># Convert to tsibble
+oil_tsbl &lt;- oil %&gt;% as_tsibble()
+
+# ACF Plot
+o1 &lt;- oil_tsbl %&gt;%
+  ACF(var = value, lag_max = 20) %&gt;%
+  autoplot()
+
+# PACF Plot
+o2 &lt;- oil_tsbl %&gt;%
+  PACF(var = value, lag_max = 20) %&gt;%
+  autoplot() 
+
+# Plot both
+plot_grid(o1, o2, ncol = 1)</code></pre>
+<p><img src="/post/2020-10-10-r-rmarkdown_files/figure-html/unnamed-chunk-23-1.png" width="672" /></p>
+</div>
+<div id="timetk-method-plot-acf-pacf" class="section level3">
+<h3>7.3 timetk Method: Plot ACF &amp; PACF</h3>
+<pre class="r"><code># Using timetk
+oil %&gt;%
+    tk_tbl(rename_index = &quot;year&quot;) %&gt;%
+    plot_acf_diagnostics(
+        .date_var = year,
+        .value = value,
+        .lags = 20,
+        .show_white_noise_bars = TRUE, 
+        .interactive = FALSE
+    )</code></pre>
+<p><img src="/post/2020-10-10-r-rmarkdown_files/figure-html/unnamed-chunk-24-1.png" width="672" /></p>
+</div>
+</div>
+<div id="summary" class="section level1">
+<h1>8. Summary</h1>
+<p>Although all three frameworks have similar functionality when it relates to visualization as they all use <code>ggplot</code> as their foundation, there are some important factors to consider.</p>
+<p>A major possible strength or downside of <code>fpp2</code> is that it uses the older base <code>ts</code> objects. However, it is no longer maintained and the author recommends using <code>fpp3</code> instead.</p>
+<p>The newer <code>fpp3</code> framework uses similar code to <code>fpp2</code> but has been updated to work with the <code>tidyverse</code> suite of data manipulation tools. However, I’ve found the <code>tsibble</code> object acts a bit unexpectedly sometimes so I wouldn’t consider it fully compatible with the <code>tidyverse</code> suite. Be especially careful when converting between different time series objects.</p>
+<p>The newest contender is <code>modeltime</code> which also works with the <code>tidyverse</code> but is better suited for data manipulation &amp; augmentation with its companion <code>timetk</code> library. It uses the <code>tibble</code> format and can coerce a range of different time series objects (<code>xts</code>, <code>zoo</code>, <code>ts</code>) using function <code>tk_tbl()</code>. One major advantage is that visualizations can be made either static (<code>ggplot</code>) or interactive (<code>plotly</code>).</p>
+</div>
+
+    </div>
+  </article>
+
+  
+
+
+</main>
+
+      <footer class="footer">
+        <ul class="footer-links">
+          <li>
+            <a href="/index.xml" type="application/rss+xml" target="_blank">RSS feed</a>
+          </li>
+          <li>
+            <a href="https://gohugo.io/" class="footer-links-kudos">Made with <img src="/images/hugo-logo.png" alt="Img link to Hugo website" width="22" height="22"></a>
+          </li>
+        </ul>
+      </footer>
+
+    </div>
+    
+
+
+
+<script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+
+
+
+<script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/languages/r.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/languages/yaml.min.js"></script>
+<script>hljs.configure({languages: []}); hljs.initHighlightingOnLoad();</script>
+
+
+
+    
+<script src="/js/math-code.js"></script>
+<script async src="//cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+
+
+    
+  </body>
+</html>
+
