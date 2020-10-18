@@ -1,7 +1,7 @@
 ---
 title: "Tidy Forecasting in R: Visualizing Time Series"
 author: "Joon Im"
-date: 2020-10-10
+date: 2020-10-11
 categories: ["R","Forecasting","Time Series"]
 tags: ["R", "tidyverse", "time Series", "modeltime", "fpp2", "fpp3", "forecast","fable"]
 ---
