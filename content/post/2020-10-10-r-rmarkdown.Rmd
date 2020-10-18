@@ -28,7 +28,7 @@ The following is a code comparison of various time series visualizations between
 
 ```{r libraries, message=FALSE, warning=FALSE}
 # Load libraries
-library(fpp2)         # The OG of forecasting
+library(fpp2)         # The OG of forecasting 
 library(fpp3)         # Official update to fpp2
 library(timetk)       # Companion to modeltime
 library(tidyverse)    # Data manipulation tools
@@ -484,7 +484,7 @@ oil %>%
 
 # 8. Summary
 
-Although all three frameworks have similar functionality when it relates to visualization as they all use `ggplot` as their foundation, there are some important factors to consider.
+Although all three frameworks have similar functionality when it relates to visualizations as they all use `ggplot` as their foundation, there are some important factors to consider.
 
 A major possible strength or downside of `fpp2` is that it uses the older base `ts` objects. However, it is no longer maintained and the author recommends using `fpp3` instead. 
 
