@@ -24,11 +24,6 @@ More recently, the `modeltime` library has been released and this also follows t
 
 The following is a code comparison of various time series visualizations between these frameworks: `fpp2`, `fpp3` and `timetk/modeltime`.
 
-Before we start, keep a few things in mind:
-
-- Only the essential code has been provided
-- Non-essential code such as plot titles and themes has been excluded
-
 ### 1.2 Load Libraries
 
 ```{r libraries, message=FALSE, warning=FALSE}
