@@ -1,0 +1,100 @@
+---
+title: 'Tidy Forecasting in R: ETS & ARIMA Modeling'
+author: "Joon Im"
+date: 2020-10-18
+categories: ["R","Forecasting","Time Series"]
+tags: ["R", "tidyverse", "time Series", "modeltime", "fpp2", "fpp3", "forecast","fable"]
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(collapse = TRUE)
+library(formatR)
+library(tidyquant)
+```
+
+# 1. Set Up
+
+### 1.1 Introduction
+
+This article is the second in a series comparing the `fpp2`, `fpp3`, and `modeltime` forecasting frameworks in `R`. Specifically we'll be focusing on how to automatically choose both exponential smoothing and ARIMA models. 
+
+### 1.2 Load Libraries
+
+```{r libraries, message=FALSE, warning=FALSE}
+# Load libraries
+library(fpp2)         # The forecasting OG
+library(fpp3)         # Official update to fpp2
+library(modeltime)    # The forecasting newcomer
+library(timetk)       # Companion to modeltime
+library(parsnip)      # Common interface for specifying models
+library(tidyverse)    # Data manipulation tools
+library(cowplot)      # Arranging plots
+```
+
+### 1.3 About Exponentially Weighted Models
+
+- A family of models where the **trend** component is either *missing*, *additive* or *damped* and the **seasonal** component is either *missing*, *additive*, or *multiplicative*
+- Forecasts are weighted averages of past observations i.e. the more recent an observation, the higher the associated weight
+
+> ETS model forecasts can be quickly generated and generalize well to many different types of time series
+
+### 1.4 About AutoRegressive Integrated Moving Average Models
+
+- A family of models where:
+  - **AR**: variable of interest undergoes a regression against prior values
+  - **I**: variable of interest undergoes a normalizing transformation called *differencing* for better model fitting
+  - **MA**: variable of interest undergoes a regression against prior residual errors 
+- Forecasts are based on the idea that models can find patterns from past values which are then applied to future values
+
+# 2. An Overview of Exponential Smoothing Models
+
+The following examples will utilize a dataset containing yearly winning times of the Boston marathon.
+
+```{r}
+# Load Boston marathon winning times 
+m_tbl <- fpp2::marathon %>%
+  tk_tbl(rename_index = "year") %>%
+  mutate(year = ymd(year, truncated = 2L))
+
+# Check it out
+m_tbl %>% head()
+```
+
+### 2.1 Simple Exponential Smoothing
+
+- The forecasts are simply the last value of the estimated level
+- The level changes over time as a function of the most recent observation
+
+```{r}
+# Convert to tsibble
+m_tsbl <- fpp2::marathon %>% as_tsibble()
+
+# Fit a SES model: additive errors, no trend, no seasonality
+fit <- m_tsbl %>%
+  model(ets = ETS(value ~ error("A") + trend("N") + season("N")))
+
+# Forecast for 10 years into the future
+fc <- fit %>% forecast(h = 10)
+
+# Plot forecasts + one-step forecasts for the training data
+fc %>%
+  autoplot(m_tsbl) +   # Plot actual data 
+  geom_line(aes(y = .fitted, colour = "Fitted"),  
+            data = augment(fit)) +  # Show how model fits the data
+  labs(title="Boston marathon winning times with 10-year SES forecast",
+       x="", y="Minutes") 
+```
+
+> 💡 If your data has no trend and no seasonality, then an SES model may work well.
+
+### 2.2 Holt's Linear Method
+
+- Holt’s linear method extends SES by adding trend
+- The forecast equation is a linear function of the forecast horizon where forecasts are the last value of the estimated level
+- The level also changes over time as a function of the most recent observation with added trend 
+
+
+
+
+
+
