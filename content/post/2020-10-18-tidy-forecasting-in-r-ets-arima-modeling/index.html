@@ -1,0 +1,718 @@
+---
+title: 'Tidy Forecasting in R: Exponential Smoothing Methods'
+author: Joon Im
+date: '2021-01-16'
+slug: tidy-forecasting-in-r-ets-arima-modeling
+categories:
+  - Forecasting
+  - R
+  - Time Series
+tags:
+  - fable
+  - fpp2
+  - forecast
+  - modeltime
+  - fpp3
+  - R
+  - tidyverse
+  - time Series
+  - residuals
+---
+
+
+
+<div id="set-up" class="section level1">
+<h1>1. Set Up</h1>
+<div id="introduction" class="section level3">
+<h3>1.1 Introduction</h3>
+<p>This article is the second in a series comparing the <code>fpp2</code>, <code>fpp3</code>, and <code>timetk</code> + <code>modeltime</code> forecasting frameworks in <code>R</code>. It will focus on how to manually <em>and</em> automatically choose an exponential smoothing model for fitting various types of time series data. It will also show how to evaluate these models to see if the residuals can be considered white noise. Exponential smoothing models are also known as Error, Trend, Seasonality (ETS) models.</p>
+</div>
+<div id="load-libraries" class="section level3">
+<h3>1.2 Load Libraries</h3>
+<pre class="r"><code># Load libraries
+library(fpp2)         # The forecasting OG
+library(fpp3)         # The tidy version of fpp2
+library(modeltime)    # The tidy forecasting newcomer
+library(timetk)       # Companion to modeltime
+library(parsnip)      # Common interface for specifying models
+library(tidyverse)    # Data manipulation tools
+library(cowplot)      # Arranging plots</code></pre>
+</div>
+<div id="about-exponentially-weighted-models" class="section level3">
+<h3>1.3 About Exponentially Weighted Models</h3>
+<p>In a nutshell, an ETS model is a mathematical formula which calculates a forecast by weighing the averages of past observations: the more recent an observation, or lag, the higher the associated weight to the formula. The formula consists of two components with multiple options:</p>
+<ul>
+<li>A <strong>trend</strong> component which is either <em>missing</em>, <em>additive</em> or <em>damped</em></li>
+<li>A <strong>seasonal</strong> component which is either <em>missing</em>, <em>additive</em>, or <em>multiplicative</em></li>
+</ul>
+<p>Every forecaster needs to understand ETS models because they are an effective tool in creating forecasts for many types of univariate time series data. In fact, a major forecasting study showed that they generally out-perform even the latest machine learning and deep learning methods for one-step forecasting on univariate data. For a breakdown of this study, read Jason Brownlee’s excellent article which compares the effectiveness of classical forecasting vs machine-learning methods <a href="https://machinelearningmastery.com/findings-comparing-classical-and-machine-learning-methods-for-time-series-forecasting/">here</a>.</p>
+<blockquote>
+<p>💡 <strong><em>Forecasts using ETS models can be quickly computed and generalize well to many different types of time series data.</em></strong></p>
+</blockquote>
+</div>
+<div id="about-ets-residuals" class="section level3">
+<h3>1.4 About ETS Residuals</h3>
+<p>The residuals of a time series are the values that are left after fitting a model. They are essentially the differences between the observations and their fitted values, otherwise known as one-step forecast errors. If the residuals show no outliers or patterns, then this means the forecasting method that was utilized captured all of the available information i.e. the residuals can be considered white noise.</p>
+<p>A good ETS model will have residuals with the following properties:</p>
+<ul>
+<li><strong>Essential:</strong> The residuals should have zero mean. If not, then the forecasts are considered biased and may require adjustment. Check the residuals plot.</li>
+<li><strong>Essential:</strong> The residuals should be uncorrelated. They will resemble white noise because the forecasting method captured all the available information. Check the ACF plot.</li>
+<li><strong>Non-Essential</strong>: The residuals have constant variance and are normally distributed. If they don’t, then the intervals will be larger and less accurate. Check the histogram plot.</li>
+</ul>
+<p>Once the residuals have been examined, a good metric for finding the best-fitting model is to minimize the bias-corrected Akaike’s Information Criterion (AICc). This process is similar to cross-validation but is faster and may be a better option for really long time series data. To learn more about how to use information criteria for model selection, read Professor Hyndman’s explanation <a href="https://otexts.com/fpp3/estimation-and-model-selection.html">here</a>.</p>
+<blockquote>
+<p>💡 <strong><em>It is important to remember that residual diagnostics only determine whether a certain forecasting method is using all of the available information in the time series. It does not tell you what the best forecasting method is.</em></strong></p>
+</blockquote>
+</div>
+</div>
+<div id="simple-exponential-smoothing" class="section level1">
+<h1>2. Simple Exponential Smoothing</h1>
+<p>The most basic ETS model estimates the level over time as a function of the most recent observation. In essence, the forecasts are simply the last value of this estimated level. The following examples will utilize a dataset containing the winning times of the Boston marathon to illustrate this.</p>
+<div id="fpp2-method-ses-model" class="section level3">
+<h3>2.1 fpp2 Method: SES Model</h3>
+<pre class="r"><code># Fit and forecast marathon winning times with an SES model 
+fc &lt;- fpp2::marathon %&gt;% ses(h = 10)
+
+# Plot forecasts + one-step forecasts for the training data
+autoplot(fc) + autolayer(fitted(fc))</code></pre>
+<p><img src="staticunnamed-chunk-1-1.png" width="672" /></p>
+</div>
+<div id="fpp3-method-ses-model" class="section level3">
+<h3>2.2 fpp3 Method: SES Model</h3>
+<pre class="r"><code># Convert to tsibble
+m_tsbl &lt;- fpp2::marathon %&gt;% as_tsibble()
+
+# Fit a SES model: additive errors, no trend, no seasonality
+fit &lt;- m_tsbl %&gt;%
+  model(ets = ETS(value ~ error(&quot;A&quot;) + trend(&quot;N&quot;) + season(&quot;N&quot;)))
+
+# Forecast for 10 years into the future
+fc &lt;- fit %&gt;% forecast(h = 10)
+
+# Plot forecasts + one-step forecasts for the training data
+fc %&gt;%
+  autoplot(m_tsbl) +   # Plot actual data 
+  geom_line(aes(y = .fitted, colour = &quot;Fitted&quot;),  
+            data = augment(fit)) +  # Show how model fits the data
+  labs(title=&quot;Boston marathon winning times with 10-year SES forecast&quot;,
+       x=&quot;&quot;, y=&quot;Minutes&quot;)</code></pre>
+<p><img src="staticunnamed-chunk-2-1.png" width="672" /></p>
+<blockquote>
+<p>💡 <strong><em>If your data has no trend and no seasonality, then an SES model may work well.</em></strong></p>
+</blockquote>
+</div>
+<div id="modeltime-method-ses-model" class="section level3">
+<h3>2.3 modeltime Method: SES Model</h3>
+<pre class="r"><code># Convert to tibble, convert index with lubridate function
+m_tbl &lt;- fpp2::marathon %&gt;% 
+  tk_tbl(rename_index = &quot;year&quot;) %&gt;%
+  mutate(year = ymd(year, truncated = 2L))
+
+# Fit a SES model: additive errors, no trend, no seasonality
+model_fit_ets &lt;- exp_smoothing(
+    seasonal_period = &quot;none&quot;,
+    error = &quot;additive&quot;,
+    trend = &quot;none&quot;,
+    season = &quot;none&quot;
+    ) %&gt;%
+  set_engine(engine = &quot;ets&quot;) %&gt;%
+  fit(value ~ year, data = m_tbl)</code></pre>
+<pre><code>## Using period = 1 (no seasonal period).</code></pre>
+<pre class="r"><code># Create table of models used
+ses_model_tbl &lt;- modeltime_table(model_fit_ets)
+  
+# Calibrate the models to produce prediction intervals
+calibration_tbl &lt;- ses_model_tbl %&gt;%
+  modeltime_calibrate(new_data = m_tbl)
+
+# Visualize the future values forecast 
+calibration_tbl %&gt;%
+  modeltime_forecast(
+      new_data    = NULL,
+      actual_data = m_tbl,
+      h = &quot;10 years&quot;   # Forecast horizon
+  ) %&gt;%
+  plot_modeltime_forecast(
+     .legend_max_width = 25, # For mobile screens
+     .interactive      = FALSE,
+     .title = &quot;Boston marathon winning times with 10-year SES forecast&quot;
+  )</code></pre>
+<pre><code>## Warning in max(ids, na.rm = TRUE): no non-missing arguments to max; returning -
+## Inf</code></pre>
+<p><img src="staticunnamed-chunk-3-1.png" width="672" /></p>
+<blockquote>
+<p><strong><em>Note that <code>fpp2</code> and <code>fpp3</code> frameworks use prediction intervals but <code>modeltime</code> uses confidence intervals. To understand the difference, click <a href="https://www.graphpad.com/support/faq/the-distinction-between-confidence-intervals-prediction-intervals-and-tolerance-intervals/">here</a>.</em></strong></p>
+</blockquote>
+</div>
+</div>
+<div id="exponential-smoothing-methods-with-trend" class="section level1">
+<h1>3. Exponential Smoothing Methods with Trend</h1>
+<p>Simple exponential smoothing can be extended by adding additional components such as trend. Just like SES, Holt’s linear methods computes a forecast based on the last value of the estimated level; however, this estimated level also changes over time as a function of the most recent observation with added trend.</p>
+<div id="about-holts-linear-damped-methods" class="section level3">
+<h3>3.1 About Holt’s Linear &amp; Damped Methods</h3>
+<ul>
+<li>Holt’s linear method forecasts continue the trend at the same slope indefinitely into the future</li>
+<li>Holt’s damped method forces the trend to dampen over time to a constant value by adding an extra damping parameter i.e. short-run forecasts are trended but the long-run forecasts are constant</li>
+</ul>
+<blockquote>
+<p>💡 <strong><em>Tip: Since the linear method tends to over-forecast for longer horizons, using the damped method in these situations is common.</em></strong></p>
+</blockquote>
+</div>
+<div id="fpp2-method-holts-linear-damped" class="section level3">
+<h3>3.2 fpp2 Method: Holt’s Linear &amp; Damped</h3>
+<p>The following examples will utilize a dataset containing population growth in the United States from 1960-2017.</p>
+<pre class="r"><code># Filter US population data
+us_population_tsbl &lt;- tsibbledata::global_economy %&gt;%
+  filter(Code == &quot;USA&quot;) %&gt;%
+  mutate(Pop = Population / 1e6) %&gt;%  # Population in millions
+  select(Year, Pop) 
+
+# Convert tsibble to ts format
+us_population_ts &lt;- as.ts(us_population_tsbl)
+
+# 15-year forecast using Holt&#39;s linear and damped methods
+fcholt &lt;- holt(us_population_ts, h = 15)
+fcdamped &lt;- holt(us_population_ts, damped = TRUE, phi = 0.9, h = 15)
+
+# Plot the forecasts without intervals
+autoplot(fcholt, PI = FALSE) + 
+  autolayer(fcdamped, PI = FALSE) +
+  ylab(&quot;Population in Millions&quot;)</code></pre>
+<p><img src="staticunnamed-chunk-4-1.png" width="672" /></p>
+</div>
+<div id="fpp3-method-holts-linear-damped" class="section level3">
+<h3>3.3 fpp3 Method: Holt’s Linear &amp; Damped</h3>
+<pre class="r"><code># Load data on US population growth
+us_population_tsbl &lt;- tsibbledata::global_economy %&gt;%
+  filter(Code == &quot;USA&quot;) %&gt;%
+  mutate(Pop = Population / 1e6)
+
+# Fit both methods: higher phi = more damping effect
+fit &lt;- us_population_tsbl %&gt;%
+    model(
+    `Linear Holt&#39;s` = ETS(Pop ~ error(&quot;A&quot;) + trend(&quot;Ad&quot;) + season(&quot;N&quot;)),
+    `Damped Holt&#39;s` = ETS(Pop ~ error(&quot;A&quot;) + trend(&quot;Ad&quot;, phi = 0.9) + season(&quot;N&quot;))
+    )
+
+# Forecast for 15 years 
+fc &lt;- fit %&gt;% forecast(h = 15)
+
+# Plot it
+fc %&gt;%
+  autoplot(us_population_tsbl, level = NULL) + 
+  labs(title=&quot;Forecasting total US population using Holt&#39;s methods&quot;,
+       x=&quot;&quot;,y=&quot;Population in Millions&quot;) + 
+  guides(colour=guide_legend(title=&quot;Forecast Method:&quot;))</code></pre>
+<p><img src="staticunnamed-chunk-5-1.png" width="672" /></p>
+</div>
+<div id="modeltime-method-holts-linear-damped" class="section level3">
+<h3>3.3 modeltime Method: Holt’s Linear &amp; Damped</h3>
+<pre class="r"><code># Convert to tibble, convert index with lubridate function
+us_population_tbl &lt;- us_population_tsbl %&gt;%
+  tk_tbl(silent = TRUE) %&gt;%
+  mutate(Year = ymd(Year, truncated = 2L))
+
+# Fit Holt&#39;s linear method
+model_fit_holt &lt;- exp_smoothing(
+    seasonal_period = 1,    # Yearly data = 1 period
+    error = &quot;additive&quot;,
+    trend = &quot;additive&quot;,
+    season = &quot;none&quot;,
+    damping = &quot;none&quot;
+    ) %&gt;%
+  set_engine(engine = &quot;ets&quot;) %&gt;%
+  fit(Pop ~ Year, data = us_population_tbl)
+
+# Fit Holt&#39;s damped method
+model_fit_damped &lt;- exp_smoothing(
+    seasonal_period = 1,
+    error = &quot;additive&quot;,
+    trend = &quot;additive&quot;,
+    season = &quot;none&quot;,
+    damping = &quot;damped&quot;
+    ) %&gt;%
+  set_engine(engine = &quot;ets&quot;) %&gt;%
+  fit(Pop ~ Year, data = us_population_tbl)
+
+# Create table of models to u
+holt_models_tbl &lt;- modeltime_table(model_fit_holt, model_fit_damped)
+  
+# Calibrate the models to produce confidence intervals
+calibration_tbl &lt;- holt_models_tbl %&gt;%
+  modeltime_calibrate(new_data = us_population_tbl)
+
+# Visualize the future values forecast 
+calibration_tbl %&gt;%
+  modeltime_forecast(
+      new_data    = NULL,
+      actual_data = us_population_tbl,
+      h = &quot;15 years&quot;   # Forecast horizon
+  ) %&gt;%
+  plot_modeltime_forecast(
+     .legend_max_width = 25, # For mobile screens
+     .interactive      = FALSE,
+     .title = &quot;Forecasting total US population using Holt&#39;s methods&quot;
+  )</code></pre>
+<p><img src="staticunnamed-chunk-6-1.png" width="672" /></p>
+<blockquote>
+<p>💡 <strong><em>Methods with a damped trend have proven to be useful when automatically generating forecasts for many series at a time.</em></strong></p>
+</blockquote>
+</div>
+</div>
+<div id="methods-with-trend-and-seasonality" class="section level1">
+<h1>4. Methods with Trend and Seasonality</h1>
+<p>Some time series data fluctuates by season and the amount of those fluctuations can also change over time. Use Holt-Winters’ additive or multiplicative methods in these situations.</p>
+<div id="about-holt-winters-additive-method" class="section level3">
+<h3>4.1 About Holt-Winters’ Additive Method</h3>
+<ul>
+<li>Same as Holt’s method except it adds or subtracts a seasonal component</li>
+<li>The seasonal component is expressed in absolute terms and averages to 0</li>
+<li>Best when the seasonal variations are mostly constant through the series</li>
+</ul>
+</div>
+<div id="about-holt-winters-multiplicative-method" class="section level3">
+<h3>4.2 About Holt-Winters’ Multiplicative Method</h3>
+<ul>
+<li>Similar to additive method except it multiplies or divides a seasonal component</li>
+<li>The seasonal component is expressed in relative percentage terms and averages to 1</li>
+<li>Best when the seasonal variations are changing with the level of the series</li>
+</ul>
+<p><img src="staticunnamed-chunk-7-1.png" width="672" /></p>
+<blockquote>
+<p><strong><em>The seasonal variations are increasing with the level of this series which makes this a good candidate for applying the HW multiplicative method.</em></strong></p>
+</blockquote>
+</div>
+<div id="fpp2-method-holt-winters-multiplicative-method" class="section level3">
+<h3>4.3 fpp2 Method: Holt-Winters’ Multiplicative Method</h3>
+<p>The following examples will utilize a dataset containing the monthly expenditure of anti-diabetic drug subsidies in Australia from 1991-2008 as shown above.</p>
+<pre class="r"><code># Forecast using Holt-Winters&#39; multiplicative method
+fcmulti &lt;- hw(fpp2::a10, 
+              seasonal = &quot;multiplicative&quot;,
+              h = 36)   # 3 years
+
+autoplot(fcmulti) + ylab(&quot;Millions of Dollars&quot;)</code></pre>
+<p><img src="staticunnamed-chunk-8-1.png" width="672" /></p>
+<blockquote>
+<p><strong><em>The HW multiplicative model accounts for increasing variation for the forecasts. Now check if the model residuals resemble white noise.</em></strong></p>
+</blockquote>
+<pre class="r"><code># Check that the residuals look like white noise
+checkresiduals(fcmulti)</code></pre>
+<p><img src="staticunnamed-chunk-9-1.png" width="672" /></p>
+<pre><code>## 
+##  Ljung-Box test
+## 
+## data:  Residuals from Holt-Winters&#39; multiplicative method
+## Q* = 75.764, df = 8, p-value = 3.467e-13
+## 
+## Model df: 16.   Total lags used: 24</code></pre>
+<blockquote>
+<p><strong><em>Is the p-value from the Ljung-Box test greater than 0.05 indicating white noise? Is the mean of the residuals close to 0? Does the ACF show a lot of correlation left? Is the distribution of the residuals normal? We’ll examine residuals more in-depth later.</em></strong></p>
+</blockquote>
+</div>
+<div id="fpp3-method-holt-winters-multiplicative-method" class="section level3">
+<h3>4.4 fpp3 Method: Holt-Winters’ Multiplicative Method</h3>
+<pre class="r"><code># Convert ts to tsibble
+a10_tsbl &lt;- fpp2::a10 %&gt;%
+  as_tsibble() 
+
+# Fit Holt-Winters&#39; multiplicative model
+fit &lt;- a10_tsbl %&gt;%
+  model(
+    Multiplicative = ETS(value ~ error(&quot;M&quot;) + trend(&quot;A&quot;) + season(&quot;M&quot;))
+  )
+
+# Produce 3 year forecasts
+fc &lt;- fit %&gt;% forecast(h=36)
+
+# Plot original data + forecasts
+fc %&gt;% 
+  autoplot(a10_tsbl) + 
+  labs(title=&quot;Forecasting monthly expenditure on anti-diabetic drugs&quot;,
+       subtitle=&quot;Holt-Winter&#39;s multiplicative method&quot;,
+       x=&quot;&quot;,y=&quot;Millions of Dollars&quot;) </code></pre>
+<p><img src="staticunnamed-chunk-10-1.png" width="672" /></p>
+</div>
+<div id="modeltime-method-holt-winters-multiplicative-method" class="section level3">
+<h3>4.5 modeltime Method: Holt-Winters’ Multiplicative Method</h3>
+<pre class="r"><code># Convert ts data to tibble
+a10_tbl &lt;- fpp2::a10 %&gt;%
+  tk_tbl() %&gt;%
+  mutate(index = as_date(index))
+
+# Fit Holt-Winters multiplicative method
+model_fit_multi &lt;- exp_smoothing(
+    seasonal_period = 12,    # Monthly data = 12 periods
+    error = &quot;multiplicative&quot;,
+    trend = &quot;additive&quot;,
+    season = &quot;multiplicative&quot;
+    ) %&gt;%
+  set_engine(engine = &quot;ets&quot;) %&gt;%
+  fit(value ~ index, data = a10_tbl)
+
+# Create table of model to use
+multi_model_tbl &lt;- modeltime_table(model_fit_multi)
+  
+# Calibrate the models to produce confidence intervals
+calibration_tbl &lt;- multi_model_tbl %&gt;%
+  modeltime_calibrate(new_data = a10_tbl)
+
+# Visualize the future values forecast 
+calibration_tbl %&gt;%
+  modeltime_forecast(
+      new_data    = NULL,
+      actual_data = a10_tbl,
+      h = &quot;3 years&quot;   # Forecast horizon
+  ) %&gt;%
+  plot_modeltime_forecast(
+     .legend_max_width = 25, # For mobile screens
+     .interactive      = FALSE,
+     .title = &quot;Forecasting monthly expenditure on anti-diabetic drugs using HW multiplicative method&quot;
+  )</code></pre>
+<pre><code>## Warning in max(ids, na.rm = TRUE): no non-missing arguments to max; returning -
+## Inf</code></pre>
+<p><img src="staticunnamed-chunk-11-1.png" width="672" /></p>
+<blockquote>
+<p>💡 <strong><em>The Holt-Winters’ methods work well on time series data with a trend and seasonal component.</em></strong></p>
+</blockquote>
+</div>
+</div>
+<div id="automatic-forecasting-with-exponential-smoothing" class="section level1">
+<h1>5. Automatic Forecasting with Exponential Smoothing</h1>
+<p>Let’s take a step back and think about what a time series is for a moment. A <em>time series</em> is essentially data that is created by some process in the world: a so-called “true” model. A <em>time series model</em> attempts to replicate that process as closely as possible by using up all of the available information given by the process.</p>
+<p>ETS models allow us to use a process called <strong>maximum likelihood estimation</strong> (the probability of the data arising from a model) to optimize parameters for automatically choosing a model. It is equivalent to minimizing the sum of squared errors.</p>
+<p>The auto-ETS algorithm utilized by all three frameworks selects a model by minimizing the bias-corrected Akaike’s Information Criterion (AICc). The AICc estimates the quality of a model by determining how much information has been lost when applying it to the data: if a model loses <em>less</em> information, then the model is of <em>higher</em> quality. In other words, the lower the value, the better. This process is similar to cross-validation but is much faster, especially on really long time series data.</p>
+<div id="fpp2-method-automatic-exponential-smoothing" class="section level3">
+<h3>5.1 fpp2 Method: Automatic Exponential Smoothing</h3>
+<p>The following example will utilize data containing the total yearly visitors to Australia. It has a trend but no seasonality.</p>
+<p><img src="staticunnamed-chunk-12-1.png" width="672" /></p>
+<pre class="r"><code># Automatically fit an exponential smoothing model
+fit &lt;- fpp2::austa %&gt;% ets()
+
+# Check model report
+summary(fit)</code></pre>
+<pre><code>## ETS(A,A,N) 
+## 
+## Call:
+##  ets(y = .) 
+## 
+##   Smoothing parameters:
+##     alpha = 0.9999 
+##     beta  = 0.0085 
+## 
+##   Initial states:
+##     l = 0.656 
+##     b = 0.1706 
+## 
+##   sigma:  0.1952
+## 
+##      AIC     AICc      BIC 
+## 17.14959 19.14959 25.06719 
+## 
+## Training set error measures:
+##                      ME      RMSE       MAE       MPE     MAPE      MASE
+## Training set 0.00372838 0.1840662 0.1611085 -1.222083 5.990319 0.7907078
+##                   ACF1
+## Training set 0.2457733</code></pre>
+<blockquote>
+<p><strong><em>The algorithm chose an ETS(A,A,N) model which is Holt’s linear method with additive errors and additive trend but no seasonal component.</em></strong></p>
+</blockquote>
+<p>Now use a Ljung-Box test to check if the residuals are independent i.e. white noise which would indicate that the model has extracted as much information as it possibly can from the data.</p>
+<pre class="r"><code># If p &gt; 0.05, then residuals are white noise 
+checkresiduals(fit)</code></pre>
+<p><img src="staticunnamed-chunk-14-1.png" width="672" /></p>
+<pre><code>## 
+##  Ljung-Box test
+## 
+## data:  Residuals from ETS(A,A,N)
+## Q* = 4.8886, df = 3, p-value = 0.1801
+## 
+## Model df: 4.   Total lags used: 7</code></pre>
+<blockquote>
+<p><strong><em>This model passes the Ljung-Box test as p &gt; 0.05. The lags of the residuals show low autocorrelation which means the model has extracted as much information as possible from the data. The distribution is mostly normal which indicates that this model will have smaller and therefore better prediction intervals.</em></strong></p>
+</blockquote>
+<pre class="r"><code># Plot 4-year auto ETS forecasts
+fit %&gt;%
+  forecast(h = 4) %&gt;%
+  autoplot()</code></pre>
+<p><img src="staticunnamed-chunk-15-1.png" width="672" /></p>
+<blockquote>
+<p><strong><em>The forecasts include a trend with good prediction intervals. The auto-ETS algorithm chose a good model for this non-seasonal data.</em></strong></p>
+</blockquote>
+</div>
+<div id="fpp3-method-automatic-exponential-smoothing" class="section level3">
+<h3>5.2 fpp3 Method: Automatic Exponential Smoothing</h3>
+<p>The following example will utilize data containing the monthly corticosteroid drug expenditure of Australia. It has a trend and seasonality.</p>
+<pre class="r"><code># Convert data on monthly expenditure to tsibble
+h02_tsbl &lt;- fpp2::h02 %&gt;%
+  as_tsibble()
+
+# Plot data 
+h02_tsbl%&gt;% 
+  autoplot(value) +
+  labs(title=&quot;Monthly corticosteroid expenditure in Australia&quot;)</code></pre>
+<p><img src="staticunnamed-chunk-16-1.png" width="672" /></p>
+<pre class="r"><code># Automatically fit an exponential smoothing model to training data
+fit_h02 &lt;- h02_tsbl %&gt;% 
+  model(ETS(value))
+
+# Check model report
+report(fit_h02)</code></pre>
+<pre><code>## Series: value 
+## Model: ETS(M,Ad,M) 
+##   Smoothing parameters:
+##     alpha = 0.1953273 
+##     beta  = 0.0001116864 
+##     gamma = 0.0001038256 
+##     phi   = 0.979755 
+## 
+##   Initial states:
+##          l           b        s1        s2        s3        s4        s5
+##  0.3945168 0.008456007 0.8740317 0.8197426 0.7644192 0.7692898 0.6940878
+##        s6       s7       s8       s9      s10      s11       s12
+##  1.283757 1.325969 1.176528 1.162098 1.095458 1.042205 0.9924144
+## 
+##   sigma^2:  0.0046
+## 
+##        AIC       AICc        BIC 
+## -122.90601 -119.20871  -63.17985</code></pre>
+<blockquote>
+<p><strong><em>The algorithm chose an ETS(M,Ad,M) model with multiplicative errors, additive trend and multiplicative seasonal component.</em></strong></p>
+</blockquote>
+<p>Now use a Ljung-Box test to check if the residuals are white noise.</p>
+<pre class="r"><code># If p &gt; 0.05, then residuals are white noise 
+fit_h02 %&gt;% 
+  augment() %&gt;%
+  select(.resid, index) %&gt;% 
+  features(.resid, ljung_box, lag=12, dof=9)</code></pre>
+<pre><code>## # A tibble: 1 x 2
+##   lb_stat     lb_pvalue
+##     &lt;dbl&gt;         &lt;dbl&gt;
+## 1    44.1 0.00000000145</code></pre>
+<blockquote>
+<p><strong><em>Since the p-value is very small, this model fails the Ljung-Box test which means the residuals overall do not resemble white noise.</em></strong></p>
+</blockquote>
+<pre class="r"><code># Check the residuals
+fit_h02 %&gt;% gg_tsresiduals()</code></pre>
+<p><img src="staticunnamed-chunk-19-1.png" width="672" /></p>
+<blockquote>
+<p><strong><em>Do the residuals have zero mean? How much autocorrelation of the lags is present? Is the distribution normal?</em></strong></p>
+</blockquote>
+<pre class="r"><code># Plot 4-year auto ETS forecasts
+fit_h02 %&gt;%
+  forecast(h = 48) %&gt;%
+  autoplot(h02_tsbl) +
+  ggtitle(&quot;Monthly corticosteroid expenditure 4-year auto-ETS forecast&quot;)</code></pre>
+<p><img src="staticunnamed-chunk-20-1.png" width="672" /></p>
+<blockquote>
+<p><strong><em>The forecasts account for trend and seasonality along with good prediction intervals. But is it the best model?</em></strong></p>
+</blockquote>
+</div>
+<div id="modeltime-method-automatic-exponential-smoothing" class="section level3">
+<h3>2.6 modeltime Method: Automatic Exponential Smoothing</h3>
+<pre class="r"><code># Convert from ts to tibble
+h02_tbl &lt;- fpp2::h02 %&gt;%
+  tk_tbl(rename_index = &quot;month&quot;) %&gt;%
+  mutate(month = as_date(month))
+
+# Set up automatic ETS model
+model_fit_ets &lt;- exp_smoothing() %&gt;%
+  set_engine(engine = &quot;ets&quot;) %&gt;%
+  fit(value ~ month, data = h02_tbl)</code></pre>
+<pre><code>## frequency = 12 observations per 1 year</code></pre>
+<pre class="r"><code># Check model report
+model_fit_ets</code></pre>
+<pre><code>## parsnip model object
+## 
+## Fit time:  690ms 
+## ETS(M,Ad,M) 
+## 
+## Call:
+##  forecast::ets(y = outcome, model = model_ets, damped = damping_ets) 
+## 
+##   Smoothing parameters:
+##     alpha = 0.1953 
+##     beta  = 1e-04 
+##     gamma = 1e-04 
+##     phi   = 0.9798 
+## 
+##   Initial states:
+##     l = 0.3945 
+##     b = 0.0085 
+##     s = 0.874 0.8197 0.7644 0.7693 0.6941 1.2838
+##            1.326 1.1765 1.1621 1.0955 1.0422 0.9924
+## 
+##   sigma:  0.0676
+## 
+##        AIC       AICc        BIC 
+## -122.90601 -119.20871  -63.17985</code></pre>
+<blockquote>
+<p><strong><em>The chosen model is the same as the prior example using fpp3 as well as the AICc score. This makes sense because both frameworks utilize the same auto-ETS algorithm derived from the <code>forecast</code> package.</em></strong></p>
+</blockquote>
+<pre class="r"><code># Create table of model to use
+auto_ets_model_tbl &lt;- modeltime_table(model_fit_ets)
+
+# Calibrate the model to produce confidence intervals
+calibration_tbl &lt;- auto_ets_model_tbl %&gt;%
+  modeltime_calibrate(new_data = h02_tbl)
+
+# Create residuals table
+residuals_tbl &lt;- calibration_tbl %&gt;% modeltime_residuals()
+
+# Plot the residuals
+residuals_tbl %&gt;% 
+  plot_modeltime_residuals(
+    .type = &quot;timeplot&quot;, 
+    .interactive = FALSE)</code></pre>
+<p><img src="staticunnamed-chunk-22-1.png" width="672" /></p>
+<blockquote>
+<p><strong><em>Does the residuals plot show a mean of 0? No, they are negative. Forecasts using this model should be considered a bit biased. Not ideal.</em></strong></p>
+</blockquote>
+<pre class="r"><code># ACF + PACF plot of residuals
+residuals_tbl %&gt;% 
+  plot_modeltime_residuals(
+    .type = &quot;acf&quot;, 
+    .interactive = FALSE,
+    .title = &quot;Residuals: ACF &amp; PACF&quot;)</code></pre>
+<pre><code>## Max lag exceeds data available. Using max lag: 203</code></pre>
+<p><img src="staticunnamed-chunk-23-1.png" width="672" /></p>
+<blockquote>
+<p><strong><em>Are the residuals correlated? A good number of lags in the ACF plot show significant autocorrelation which means there is still some information left that is not being utilized by the model. This is more evidence that the residuals are not white noise.</em></strong></p>
+</blockquote>
+<pre class="r"><code># Visualize the future values forecast 
+calibration_tbl %&gt;%
+  modeltime_forecast(
+      new_data    = NULL,
+      actual_data = h02_tbl,
+      h = &quot;4 years&quot;   # Forecast horizon
+  ) %&gt;%
+  plot_modeltime_forecast(
+     .legend_max_width = 25, # For mobile screens
+     .interactive      = FALSE,
+     .title = &quot;Monthly corticosteroid expenditure 4-year auto-ETS forecast&quot;
+  )</code></pre>
+<p><img src="staticunnamed-chunk-24-1.png" width="672" /></p>
+<blockquote>
+<p>💡 <strong><em>Remember, although the auto-ETS algorithm chose a reasonable model for this seasonal data, there may be a better performing model out there whose residuals more closely resemble white noise i.e. it has extracted more information from the “true” model.</em></strong></p>
+</blockquote>
+</div>
+</div>
+<div id="when-not-to-use-exponential-smoothing" class="section level1">
+<h1>6. When Not to Use Exponential Smoothing</h1>
+<p>Although ETS models generalize well to many different kinds of time series, they will fail completely if the data is cyclic in nature. The following examples will utilize data containing the annual numbers of lynx trappings in Canada from 1821-1934 to illustrate this.</p>
+<p><img src="staticunnamed-chunk-25-1.png" width="672" /></p>
+<div id="fpp2-method-ets-fail" class="section level3">
+<h3>6.1 fpp2 Method: ETS Fail</h3>
+<pre class="r"><code># Fit an auto ETS model  
+fit &lt;- ets(lynx)
+
+# Check model report
+summary(fit)</code></pre>
+<pre><code>## ETS(M,N,N) 
+## 
+## Call:
+##  ets(y = lynx) 
+## 
+##   Smoothing parameters:
+##     alpha = 0.9999 
+## 
+##   Initial states:
+##     l = 2372.8047 
+## 
+##   sigma:  0.9594
+## 
+##      AIC     AICc      BIC 
+## 2058.138 2058.356 2066.346 
+## 
+## Training set error measures:
+##                    ME     RMSE      MAE       MPE     MAPE     MASE      ACF1
+## Training set 8.975647 1198.452 842.0649 -52.12968 101.3686 1.013488 0.3677583</code></pre>
+<pre class="r"><code># Plot 20-year forecasts of auto ETS forecasts
+fit %&gt;% 
+  forecast(h = 20) %&gt;% 
+  autoplot() </code></pre>
+<p><img src="staticunnamed-chunk-27-1.png" width="672" /></p>
+</div>
+<div id="fpp3-method-ets-fail" class="section level3">
+<h3>6.2 fpp3 Method: ETS Fail</h3>
+<pre class="r"><code># Convert Canadian lynx trappings data to tsibble 
+lynx_tsbl &lt;- fma::lynx %&gt;% as_tsibble()
+
+# Fit an auto ETS model
+fit &lt;- lynx_tsbl %&gt;% model(ets = ETS(value))
+
+# Check model report
+report(fit)</code></pre>
+<pre><code>## Series: value 
+## Model: ETS(M,N,N) 
+##   Smoothing parameters:
+##     alpha = 0.9999 
+## 
+##   Initial states:
+##         l
+##  2372.805
+## 
+##   sigma^2:  0.9204
+## 
+##      AIC     AICc      BIC 
+## 2058.138 2058.356 2066.346</code></pre>
+<pre class="r"><code># Plot 20-year forecasts of auto ETS forecasts
+fit %&gt;% 
+  forecast(h=20) %&gt;% 
+  autoplot(lynx_tsbl) + 
+  labs(
+    title = &quot;Annual lynx trappings 20-year auto ETS forecasts&quot;,
+    x = &quot;Year&quot;, y = &quot;Trappings&quot;
+  )</code></pre>
+<p><img src="staticunnamed-chunk-29-1.png" width="672" /></p>
+</div>
+<div id="modeltime-method-ets-fail" class="section level3">
+<h3>6.3 modeltime Method: ETS Fail</h3>
+<pre class="r"><code># Convert Canadian lynx trappings data to tsibble 
+lynx_tbl &lt;- fma::lynx %&gt;% 
+  tk_tbl(rename_index = &quot;year&quot;) %&gt;%
+  mutate(year = ymd(year, truncated = 2L))
+
+# Auto-fit an ETS model
+model_fit &lt;- exp_smoothing() %&gt;%
+  set_engine(engine = &quot;ets&quot;) %&gt;%
+  fit(value ~ year, data = lynx_tbl)</code></pre>
+<pre><code>## frequency = 5 observations per 5 years</code></pre>
+<pre class="r"><code># Create table of model to use
+model_tbl &lt;- modeltime_table(model_fit)
+model_tbl</code></pre>
+<pre><code>## # Modeltime Table
+## # A tibble: 1 x 3
+##   .model_id .model   .model_desc
+##       &lt;int&gt; &lt;list&gt;   &lt;chr&gt;      
+## 1         1 &lt;fit[+]&gt; ETS(M,N,N)</code></pre>
+<pre class="r"><code># Calibrate the model to the data
+calibration_tbl &lt;- model_tbl %&gt;%
+  modeltime_calibrate(new_data = lynx_tbl)
+
+# Visualize the future values forecast 
+calibration_tbl %&gt;%
+  modeltime_forecast(
+      new_data    = NULL,
+      actual_data = lynx_tbl,
+      h = &quot;20 years&quot;   # Forecast horizon
+  ) %&gt;%
+  plot_modeltime_forecast(
+     .legend_max_width = 25, # For mobile screens
+     .interactive      = FALSE,
+     .title = &quot;Annual lynx trappings 20-year auto ETS forecasts&quot;
+  )</code></pre>
+<p><img src="staticunnamed-chunk-31-1.png" width="672" /></p>
+<blockquote>
+<p><strong><em>All three frameworks chose the same ETS(M,N,N) model: simple exponential smoothing with multiplicative errors, no trend, and no seasonality. They all failed to produce a reasonable forecast due to the cyclic nature of the data.</em></strong></p>
+</blockquote>
+</div>
+</div>
+<div id="conclusions-about-exponential-smoothing-models" class="section level1">
+<h1>7. Conclusions About Exponential Smoothing Models</h1>
+<ul>
+<li>Exponential smoothing models combine Error, Trend, and Season components to fit time series data.</li>
+<li>If the data shows a trend, then you apply an additive component. If the data varies exponentially, then you apply a multiplicative component.</li>
+<li>Just like with trend, if the data shows seasonal patterns, then you can apply an additive or multiplicative component.</li>
+</ul>
+<p>ETS models ignore random variation in favor of a smoothing process which can sometimes lead to problematic forecasts. They also cannot be applied to data with a cyclic pattern. However, ETS models can be computed quickly and generalize well to a diverse set of time series data. They are especially useful for quickly forecasting on univariate data and should be a tool in every forecaster’s toolbox.</p>
+</div>
