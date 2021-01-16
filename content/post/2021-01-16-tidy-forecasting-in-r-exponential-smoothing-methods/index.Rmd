@@ -2,21 +2,21 @@
 title: 'Tidy Forecasting in R: Exponential Smoothing Methods'
 author: Joon Im
 date: '2021-01-16'
-slug: tidy-forecasting-in-r-ets-arima-modeling
+slug: tidy-forecasting-in-r-exponential-smoothing-methods
 categories:
   - Forecasting
   - R
   - Time Series
 tags:
   - fable
-  - fpp2
   - forecast
-  - modeltime
+  - fpp2
   - fpp3
+  - modeltime
   - R
+  - residuals
   - tidyverse
   - time Series
-  - residuals
 ---
 
 ```{r setup, include=FALSE}
