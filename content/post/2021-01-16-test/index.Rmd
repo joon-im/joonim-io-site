@@ -1,18 +1,8 @@
 ---
 title: test
-author: test
+author: R package build
 date: '2021-01-16'
 slug: test
 categories: []
 tags: []
 ---
-
-
-
-testing  
-
-
-```{r}
-mtcars
-```
-
