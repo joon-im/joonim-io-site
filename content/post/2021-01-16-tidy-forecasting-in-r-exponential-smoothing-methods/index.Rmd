@@ -42,7 +42,7 @@ library(modeltime)    # The tidy forecasting newcomer
 library(timetk)       # Companion to modeltime
 library(parsnip)      # Common interface for specifying models
 library(tidyverse)    # Data manipulation tools
-library(cowplot)      # Arranging plots
+library(cowplot)      # Arranging plots 
 ```
 
 ### 1.3 About Exponentially Weighted Models
